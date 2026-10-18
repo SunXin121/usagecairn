@@ -2,7 +2,6 @@ const os = require("node:os");
 const path = require("node:path");
 const fs = require("node:fs");
 
-const { readJson } = require("./fs");
 const { readSqliteFirstValue } = require("./sqlite-reader");
 
 // ── Path resolution ──

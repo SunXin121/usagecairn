@@ -5,6 +5,8 @@ node_modules/
 node_modules
 dist/
 build/
+# Local agent/IDE state (goal contracts, caches) — never part of the product.
+.pi/
 .tmp/
 dashboard/tmp/
 *.tsbuildinfo

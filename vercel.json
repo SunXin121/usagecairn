@@ -1,0 +1,10 @@
+{
+  "installCommand": "npm ci && npm ci --prefix dashboard",
+  "buildCommand": "npm run dashboard:build",
+  "outputDirectory": "dashboard/dist",
+  "functions": { "api/*.js": { "maxDuration": 30 } },
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/((?!api/).*)", "dest": "/index.html" }
+  ]
+}

@@ -41,6 +41,15 @@ async function zstdCompress(data) {
   return Buffer.from(await require("@mongodb-js/zstd").compress(data));
 }
 
+function hasNativeZstdFallback() {
+  try {
+    require("@mongodb-js/zstd");
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
 async function makeDb({ rows, withCreatedAt = true }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "zed-test-"));
   const dbPath = path.join(dir, "threads.db");
@@ -92,8 +101,14 @@ test("decodeZedThreadBlob handles json and zstd, rejects unknown", async () => {
   await assert.rejects(() => decodeZedThreadBlob({ dataType: "bogus", data: Buffer.alloc(0) }));
 });
 
-test("decodeZedThreadBlob falls back when native zstd is unavailable", async () => {
-  const z = await zstdCompress(Buffer.from('{"fallback":true}'));
+test("decodeZedThreadBlob falls back when native zstd is unavailable", async (t) => {
+  // The fallback is an optional native dependency. An install that blocks its
+  // build script (npm allowScripts) cannot exercise this path, so skip rather
+  // than fail the collector suite.
+  if (!hasNativeZstdFallback()) {
+    t.skip("@mongodb-js/zstd native binding is not built in this install");
+    return;
+  }
   const original = zlib.zstdDecompressSync;
   zlib.zstdDecompressSync = undefined;
   try {

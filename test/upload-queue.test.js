@@ -5,9 +5,8 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
-const http = require("node:http");
 const { compactPendingQueue } = require("../src/lib/upload-queue");
-const { readQueueBatch, drainQueueToCloud } = require("../src/commands/sync");
+const { readQueueBatch } = require("../src/lib/queue-batch");
 const { upsertAccountSessionStates } = require("../src/lib/account-usage-dedup");
 
 const row = (id, total) => ({ source: "claude", model: `模型-${id}`, hour_start: "2026-10-12T00:00:00Z", input_tokens: total, total_tokens: total });
@@ -151,141 +150,11 @@ test("compaction preserves existing permissions under a restrictive umask", { sk
   assert.equal((await fs.stat(x.queuePath)).mode & 0o777, 0o640);
 });
 
-test("local checkpoint failure remains an error when the request deadline has expired", async (t) => {
-  const x = await fixture(t, encode(row("a", 100)));
-  await fs.writeFile(x.queueStatePath, '{"offset":0}');
-  const server = http.createServer((request, response) => {
-    request.resume();
-    request.on("end", () => {
-      response.writeHead(200, { "Content-Type": "application/json" });
-      response.end(JSON.stringify({ inserted: 1, next_allowed_at: "2026-10-13T00:00:00Z" }));
-    });
-  });
-  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-  t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
-  const realFetch = global.fetch;
-  const realRename = fs.rename;
-  let signal;
-  global.fetch = (input, options) => { signal = options.signal; return realFetch(input, options); };
-  fs.rename = async (from, to) => {
-    if (to !== x.queueStatePath) return realRename(from, to);
-    if (!signal.aborted) await new Promise(resolve => signal.addEventListener("abort", resolve, { once: true }));
-    throw Object.assign(new Error("checkpoint denied"), { code: "EACCES" });
-  };
-  try {
-    await assert.rejects(drainQueueToCloud({ ...x, baseUrl: `http://127.0.0.1:${server.address().port}`,
-      deviceToken: "fixture", maxDurationMs: 2000 }), error => {
-      assert.equal(error.code, "EACCES");
-      assert.equal(error.uploadResult.batches, 1);
-      return true;
-    });
-    assert.equal(JSON.parse(await fs.readFile(x.queueStatePath, "utf8")).offset, 0);
-  } finally { global.fetch = realFetch; fs.rename = realRename; }
-});
-
 test("an oversized line crossing read chunks keeps its exact bytes", async (t) => {
   const bigRow = { ...row("a", 10), fixture: "中文".repeat(40_000) };
   const x = await fixture(t, encode(row("a", 100)) + encode(bigRow));
   assert.equal((await compactPendingQueue({ ...x, minPendingBytes: 0 })).removedRecords, 1);
   assert.equal(await fs.readFile(x.queuePath, "utf8"), encode(bigRow));
-});
-
-test("drain time budget aborts a stalled request and preserves previous successful offset/cooldown", async (t) => {
-  const x = await fixture(t, [row("a", 100), row("b", 50)].map(encode).join(""));
-  const realFetch = global.fetch;
-  t.after(() => { global.fetch = realFetch; });
-  let requests = 0;
-  global.fetch = async (_url, options) => {
-    requests += 1;
-    if (requests === 1) return { ok: true, text: async () => JSON.stringify({ inserted: 1, next_allowed_at: "2026-10-12T01:00:00Z" }) };
-    return new Promise((_resolve, reject) => options.signal.addEventListener("abort", () => reject(options.signal.reason), { once: true }));
-  };
-  // AbortSignal.timeout does not keep Node alive by itself.
-  const keepAlive = setInterval(() => {}, 1000);
-  t.after(() => clearInterval(keepAlive));
-  const started = Date.now();
-  const result = await drainQueueToCloud({ ...x, baseUrl: "https://fixture.test", deviceToken: "fixture", maxBatches: 100, batchSize: 1, maxDurationMs: 2000 });
-  assert.equal(result.batches, 1);
-  assert.equal(result.cloudAccess.next_allowed_at, "2026-10-12T01:00:00Z");
-  assert.equal(JSON.parse(await fs.readFile(x.queueStatePath, "utf8")).offset, Buffer.byteLength(encode(row("a", 100))));
-  assert.equal(requests, 2);
-  assert.ok(Date.now() - started < 10_000);
-});
-
-test("community window stops at ten batches and a partial HTTP failure carries prior cloud access", async (t) => {
-  const x = await fixture(t, Array.from({ length: 20 }, (_, i) => encode(row(String(i), 1))).join(""));
-  const realFetch = global.fetch;
-  t.after(() => { global.fetch = realFetch; });
-  let calls = 0;
-  global.fetch = async () => { calls += 1; return { ok: true, text: async () => JSON.stringify({ inserted: 1, upload_scope: "community" }) }; };
-  const result = await drainQueueToCloud({ ...x, baseUrl: "https://fixture.test", deviceToken: "fixture", maxBatches: 100, batchSize: 1 });
-  assert.equal(result.batches, 10);
-  assert.equal(calls, 10);
-  calls = 0;
-  global.fetch = async () => {
-    calls += 1;
-    return calls === 1
-      ? { ok: true, text: async () => JSON.stringify({ inserted: 1, next_allowed_at: "2026-10-12T01:00:00Z" }) }
-      : { ok: false, status: 503, text: async () => '{"code":"fixture_failure"}' };
-  };
-  await assert.rejects(drainQueueToCloud({ ...x, baseUrl: "https://fixture.test", deviceToken: "fixture", maxBatches: 100, batchSize: 1 }), (error) => {
-    assert.equal(error.status, 503);
-    assert.equal(error.uploadResult.batches, 1);
-    assert.equal(error.uploadResult.cloudAccess.next_allowed_at, "2026-10-12T01:00:00Z");
-    return true;
-  });
-});
-
-test("real HTTP response-body stall obeys the drain deadline without advancing the stalled batch", async (t) => {
-  const x = await fixture(t, [row("a", 100), row("b", 50)].map(encode).join(""));
-  let calls = 0;
-  const server = http.createServer((request, response) => {
-    request.resume();
-    request.on("end", () => {
-      calls += 1;
-      response.writeHead(200, { "Content-Type": "application/json" });
-      if (calls === 1) response.end(JSON.stringify({ inserted: 1, next_allowed_at: "2026-10-12T01:00:00Z" }));
-      else response.write('{"inserted":');
-    });
-  });
-  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  t.after(async () => { server.closeAllConnections(); await new Promise((resolve) => server.close(resolve)); });
-  const started = Date.now();
-  const result = await drainQueueToCloud({ ...x, baseUrl: `http://127.0.0.1:${server.address().port}`, deviceToken: "fixture", maxBatches: 100, batchSize: 1, maxDurationMs: 3000 });
-  assert.equal(calls, 2);
-  assert.equal(result.batches, 1);
-  assert.equal(result.cloudAccess.next_allowed_at, "2026-10-12T01:00:00Z");
-  assert.equal(JSON.parse(await fs.readFile(x.queueStatePath, "utf8")).offset, Buffer.byteLength(encode(row("a", 100))));
-  assert.ok(Date.now() - started < 10_000);
-});
-
-test("the upload window has a hard 100-batch cap even when a caller requests more", async (t) => {
-  const x = await fixture(t, Array.from({ length: 101 }, (_, i) => encode(row(String(i), 1))).join(""));
-  const realFetch = global.fetch;
-  t.after(() => { global.fetch = realFetch; });
-  let calls = 0;
-  global.fetch = async () => { calls += 1; return { ok: true, text: async () => '{"inserted":1,"upload_scope":"cloud"}' }; };
-  const result = await drainQueueToCloud({ ...x, baseUrl: "https://fixture.test", deviceToken: "fixture", maxBatches: 1000, batchSize: 1 });
-  assert.equal(result.batches, 100);
-  assert.equal(calls, 100);
-  assert.ok(JSON.parse(await fs.readFile(x.queueStatePath, "utf8")).offset < (await fs.stat(x.queuePath)).size);
-});
-
-test("ignored complete tail records advance locally while an incomplete tail remains retryable", async (t) => {
-  const ignored = '{bad-json}\n' + encode({ kind: "account_sync_watermark" }) + encode({ kind: "future_control" });
-  const incomplete = '{"hour_start":"';
-  const raw = encode(row("a", 100)) + ignored + incomplete;
-  const x = await fixture(t, raw);
-  const realFetch = global.fetch;
-  t.after(() => { global.fetch = realFetch; });
-  let calls = 0;
-  global.fetch = async () => { calls += 1; return { ok: true, text: async () => '{"inserted":1}' }; };
-  const drain = () => drainQueueToCloud({ ...x, baseUrl: "https://fixture.test", deviceToken: "fixture", batchSize: 1 });
-  assert.equal((await drain()).batches, 1);
-  assert.equal(JSON.parse(await fs.readFile(x.queueStatePath, "utf8")).offset, Buffer.byteLength(raw) - Buffer.byteLength(incomplete));
-  assert.equal((await drain()).batches, 0);
-  assert.equal(calls, 1);
-  assert.equal(await fs.readFile(x.queuePath, "utf8"), raw, "ignored and incomplete records remain on disk");
 });
 
 test("session truth survives compaction and batch boundaries with older/equal/invalid stamps and zero corrections", async (t) => {

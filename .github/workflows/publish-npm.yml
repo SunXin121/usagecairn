@@ -1,0 +1,71 @@
+name: Publish to npm
+
+# Pushing a `v*` tag publishes the CLI so `npx tokentracker-cli@latest` resolves
+# to the new release. Set the NPM_TOKEN secret (an npm automation/granular token
+# with publish rights) to enable it; without it the job only logs a notice.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check npm token
+        id: guard
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping npm publish — set the NPM_TOKEN secret to publish releases."
+          fi
+
+      - name: Verify tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version ${version}"
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.enabled == 'true'
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            dashboard/package-lock.json
+
+      - name: Install
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          npm ci
+          npm ci --prefix dashboard
+
+      - name: Verify
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm run ci:local
+
+      - name: Publish
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

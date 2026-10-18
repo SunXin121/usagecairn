@@ -1,37 +1,8 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { InsforgeAuthProvider } from "./contexts/InsforgeAuthContext.jsx";
-import { AccountViewProvider } from "./contexts/AccountViewContext.jsx";
-import { LocaleProvider } from "./ui/foundation/LocaleProvider.jsx";
-import { CurrencyProvider } from "./ui/foundation/CurrencyProvider.jsx";
-import { TokenFormatProvider } from "./ui/foundation/TokenFormatProvider.jsx";
-import App from "./App.jsx";
-import { initAnalytics } from "./lib/analytics.js";
-import "@fontsource/geist-mono/400.css";
-import "@fontsource/geist-mono/500.css";
-import "@fontsource/geist-mono/700.css";
-import "@fontsource/geist-mono/900.css";
-import "./styles.css";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { ThemeProvider } from './ui/foundation/ThemeProvider.jsx';
+import App from './App.jsx';
+import '@fontsource/geist-mono/400.css';
+import './styles.css';
 
-initAnalytics();
-
-const router = createBrowserRouter([
-  { path: "*", element: <App /> },
-]);
-
-createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <LocaleProvider>
-      <TokenFormatProvider>
-        <CurrencyProvider>
-          <InsforgeAuthProvider>
-            <AccountViewProvider>
-              <RouterProvider router={router} />
-            </AccountViewProvider>
-          </InsforgeAuthProvider>
-        </CurrencyProvider>
-      </TokenFormatProvider>
-    </LocaleProvider>
-  </React.StrictMode>,
-);
+createRoot(document.getElementById('root')).render(<React.StrictMode><ThemeProvider><App /></ThemeProvider></React.StrictMode>);

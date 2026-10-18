@@ -25,13 +25,19 @@ You can expect an initial response within a few days. Once a fix is ready, it wi
 
 ## Scope
 
-TokenTracker is a local-first tool that reads AI CLI tool logs from your home directory. The most sensitive areas to consider when reviewing security:
+TokenTracker reads AI CLI logs from your home directory, stores scalar usage
+counts, uploads them to a PostgreSQL instance you control, and renders them in a
+web dashboard. The security-relevant surfaces are:
 
-- **`src/lib/rollout.js`** — parses logs from 8 different AI CLI tools. Privacy rule: only token counts and timestamps may be extracted, never prompt or response content.
-- **`src/lib/cursor-config.js`** — reads Cursor's local SQLite to extract auth tokens for the Cursor usage API. Tokens must never leave the user's machine.
-- **`src/lib/local-api.js`** — local HTTP server bound to `127.0.0.1`. Should not accept connections from other hosts.
-- **`TokenTrackerBar/`** — macOS app, ad-hoc signed. Has filesystem access via macOS TCC permissions; should never write outside its own data directories or the documented snapshot/queue paths.
-- **`insforge/`** — optional cloud edge functions. Only used if the user opts into the leaderboard.
+- **`src/lib/rollout.js`** — parses provider logs. Privacy rule: only token counts,
+  model names and timestamps may be extracted — never prompt or response content.
+- **`src/lib/cursor-config.js`** — reads Cursor's local SQLite for a usage API
+  token. That token must never leave the user's machine.
+- **`src/commands/upload.js` / `server/service.cjs`** — the upload path and the
+  server handler. Access keys are hashed at rest, requests are account-scoped,
+  and only scalar counters leave the machine.
+- **`dashboard/src/App.jsx`** — the browser stores the access key in
+  `sessionStorage` only; it must never be placed in URLs or logs.
 
 ## Out of Scope
 

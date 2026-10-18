@@ -1,100 +1,58 @@
 {
   "name": "tokentracker-cli",
   "version": "1.4.5",
-  "description": "Local-first AI coding token usage and cost tracker for 46 tools, with a dashboard, desktop pet, widgets, achievements, and native macOS/Windows apps.",
-  "main": "src/cli.js",
-  "bin": {
-    "tokentracker-cli": "bin/tracker.js",
-    "tracker": "bin/tracker.js",
-    "tokentracker": "bin/tracker.js",
-    "tokentracker-tracker": "bin/tracker.js"
-  },
-  "files": [
-    "bin/",
-    "src/",
-    "dashboard/dist/",
-    "LICENSE",
-    "THIRD_PARTY_NOTICES.md",
-    "README.md"
-  ],
-  "type": "commonjs",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "ci:local": "npm test && npm run validate:copy && npm run validate:locale && npm run validate:ui-hardcode && npm run validate:guardrails && npm run validate:versions && npm run validate:bot-frames && node --test test/architecture-guardrails.test.js && npm --prefix dashboard run build",
-    "copy:pull": "node scripts/copy-sync.cjs pull",
-    "copy:push": "node scripts/copy-sync.cjs push",
-    "dashboard:build": "npm --prefix dashboard run build",
-    "linux:bundle": "TOKENTRACKER_BUILD_PET=1 npm run dashboard:build && npm --prefix TokenTrackerLinux run bundle:node",
-    "linux:build": "npm run linux:bundle && npm --prefix TokenTrackerLinux run build",
-    "linux:package:local": "npm --prefix TokenTrackerLinux run package:local",
-    "dashboard:dev": "npm --prefix dashboard run dev",
-    "dashboard:open": "bash scripts/open-dashboard.sh",
-    "dashboard:preview": "npm --prefix dashboard run preview",
-    "dev:shim": "node scripts/dev-bin-shim.cjs",
-    "audit:tokens": "node scripts/audit-token-correctness.cjs",
-    "graph:auto-index": "node scripts/graph/auto-index.cjs",
-    "graph:scip": "node scripts/graph/generate-scip.cjs",
-    "pricing:build-seed": "node scripts/build-pricing-seed.cjs",
-    "prepublishOnly": "node scripts/build-pricing-seed.cjs",
-    "test": "node --test test/*.test.js",
-    "gen:bot-frames": "node scripts/gen-bot-frames.cjs",
-    "validate:bot-frames": "node scripts/gen-bot-frames.cjs --check",
-    "validate:copy": "node scripts/validate-copy-registry.cjs",
-    "validate:locale": "node scripts/validate-locale-coverage.cjs",
-    "validate:guardrails": "node scripts/validate-architecture-guardrails.cjs",
-    "validate:retros": "node scripts/validate-retros.cjs",
-    "validate:ui-hardcode": "node scripts/ops/validate-ui-hardcode.cjs",
-    "sync-versions": "node scripts/sync-versions.cjs",
-    "validate:versions": "node scripts/validate-versions.cjs",
-    "version": "node scripts/sync-versions.cjs && git add TokenTrackerBar/project.yml TokenTrackerWin/TokenTrackerWin.csproj TokenTrackerLinux/package.json TokenTrackerLinux/package-lock.json TokenTrackerLinux/src-tauri/Cargo.toml TokenTrackerLinux/src-tauri/Cargo.lock TokenTrackerLinux/src-tauri/tauri.conf.json TokenTrackerLinux/packaging/arch/tokentracker-linux/PKGBUILD"
-  },
-  "dependencies": {
-    "@journeyapps/wa-sqlite": "2.0.7",
-    "@mongodb-js/zstd": "^2.0.1",
-    "smol-toml": "^1.9.0",
-    "undici": "8.11.2",
-    "yauzl": "^3.4.0"
-  },
-  "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8",
-    "@sourcegraph/scip-typescript": "^0.4.0",
-    "@waffo/pancake-ts": "0.25.0",
-    "alipay-sdk": "4.14.0",
-    "esbuild": "0.28.2",
-    "pngjs": "^7.0.0",
-    "sql.js": "1.14.2",
-    "urllib": "4.9.1"
-  },
+  "description": "Local AI token usage collector with a PostgreSQL-backed web dashboard",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xiufengsun/TokenTracker.git"
   },
-  "homepage": "https://www.tokentracker.cc",
+  "homepage": "https://github.com/xiufengsun/TokenTracker#readme",
   "bugs": {
     "url": "https://github.com/xiufengsun/TokenTracker/issues"
   },
   "keywords": [
-    "token",
-    "tracker",
-    "ai",
-    "claude",
-    "codex",
-    "cursor",
-    "gemini",
-    "kiro",
-    "opencode",
+    "tokens",
     "usage",
-    "cost",
-    "ai-coding-tools",
-    "desktop-pet",
-    "desktop-widget",
-    "macos",
-    "windows",
-    "observability"
+    "claude-code",
+    "codex",
+    "dashboard",
+    "postgresql",
+    "vercel"
   ],
+  "main": "src/cli.js",
+  "bin": {
+    "tracker": "bin/tracker.js",
+    "tokentracker": "bin/tracker.js",
+    "tokentracker-cli": "bin/tracker.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "ci:local": "npm test && npm run dashboard:test && npm run dashboard:build",
+    "dashboard:test": "npm --prefix dashboard test",
+    "dashboard:build": "npm --prefix dashboard run build",
+    "dashboard:dev": "npm --prefix dashboard run dev",
+    "dashboard:preview": "npm --prefix dashboard run preview",
+    "pricing:build-seed": "node scripts/build-pricing-seed.cjs",
+    "prepublishOnly": "node scripts/build-pricing-seed.cjs"
+  },
+  "dependencies": {
+    "@mongodb-js/zstd": "^2.0.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8"
+  },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   }

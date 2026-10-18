@@ -1,4 +1,0 @@
-.electric-logo { position: relative; width: 100%; height: 100%; overflow: hidden; }
-.electric-logo canvas { opacity: 0; transition: opacity 260ms ease; }
-.electric-logo[data-electric-state="ready"] canvas { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .electric-logo canvas { transition: none; } }

@@ -15,7 +15,7 @@ const {
 const { resolveMimoNativeDbPath } = require("../lib/install-resolver");
 const { resolveDumateDbPaths } = require("../lib/dumate");
 const { expandHome } = require("../lib/scan-roots");
-const { prompt, promptHidden } = require("../lib/prompt");
+const { prompt } = require("../lib/prompt");
 const {
   upsertCodexNotify,
   upsertAcodeNotify,
@@ -82,8 +82,6 @@ const {
   resolveMuseHome,
   resolveTraeStoragePath,
 } = require("../lib/rollout");
-const { resolveRuntimeConfig, DEFAULT_BASE_URL, normalizeInstanceBaseUrl, assertInsforgeRuntime,
-  clearDeviceIdentity, resetInstanceState } = require("../lib/runtime-config");
 const {
   BOLD,
   DIM,
@@ -94,8 +92,7 @@ const {
   promptMenu,
   createSpinner,
 } = require("../lib/cli-ui");
-const { renderLocalReport, renderAuthTransition, renderSuccessBox } = require("../lib/init-flow");
-const { maybeShowStarCta } = require("../lib/star-cta");
+const { renderLocalReport } = require("../lib/init-flow");
 
 const ASCII_LOGO = [
   "████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗",
@@ -169,21 +166,15 @@ const SUPPORTED_PROVIDERS = [
 async function cmdInit(argv, options = {}) {
   const opts = parseArgs(argv);
   const home = options.home || os.homedir();
-  if (opts.anonKeyFile) opts.anonKey = (await fs.readFile(opts.anonKeyFile, "utf8")).trim();
+
 
   const { rootDir, trackerDir, binDir } = await resolveTrackerPaths({ home });
 
   const configPath = path.join(trackerDir, "config.json");
   const notifyOriginalPath = path.join(trackerDir, "codex_notify_original.json");
-  const linkCodeStatePath = path.join(trackerDir, "link_code_state.json");
+
 
   const existingConfig = await readJson(configPath);
-  const runtime = resolveRuntimeConfig({
-    cli: { baseUrl: opts.baseUrl, dashboardUrl: opts.dashboardUrl, anonKey: opts.anonKey },
-    config: existingConfig || {},
-    env: process.env,
-  });
-  assertInsforgeRuntime(runtime);
   const notifyPath = path.join(binDir, "notify.cjs");
   const appDir = path.join(trackerDir, "app");
   const trackerBinPath = path.join(appDir, "bin", "tracker.js");
@@ -210,15 +201,8 @@ async function cmdInit(argv, options = {}) {
   }
 
   if (opts.dryRun) {
-    const preview = await buildDryRunSummary({
-      opts,
-      home,
-      trackerDir,
-      notifyPath,
-      runtime,
-    });
+    const preview = await buildDryRunSummary({ opts, home, trackerDir, notifyPath });
     renderLocalReport({ summary: preview.summary, isDryRun: true });
-    renderAccountNotLinked({ context: "dry-run" });
     return;
   }
 
@@ -233,11 +217,11 @@ async function cmdInit(argv, options = {}) {
       binDir,
       configPath,
       notifyOriginalPath,
-      linkCodeStatePath,
+
       notifyPath,
       appDir,
       trackerBinPath,
-      runtime,
+
       existingConfig,
     });
   } catch (err) {
@@ -247,6 +231,19 @@ async function cmdInit(argv, options = {}) {
   spinner.stop();
 
   renderLocalReport({ summary: setup.summary, isDryRun: false });
+
+  // Persist upload credentials so background hook runs (which do not inherit an
+  // interactive shell profile) can upload without re-entering the key.
+  try {
+    const { resolveUploadConfig, writeUploadConfig } = require("../lib/upload-config");
+    const uploadConfig = resolveUploadConfig({ queuePath: path.join(trackerDir, "queue.jsonl") });
+    if (uploadConfig.apiUrl && uploadConfig.accessKey && uploadConfig.source === "env") {
+      writeUploadConfig(path.join(trackerDir, "queue.jsonl"), uploadConfig);
+      process.stdout.write(`Upload destination saved: ${uploadConfig.apiUrl}\n`);
+    }
+  } catch (err) {
+    process.stderr.write(`Could not save upload credentials: ${err.message}\n`);
+  }
 
   // Run first sync inline (with a generous timeout) so we can render the
   // *actual* token total in the success message — the aha moment. If the
@@ -269,7 +266,6 @@ async function cmdInit(argv, options = {}) {
   }
 
   renderLocalSuccess({ firstSync });
-  await maybeShowStarCta({ trackerDir });
 }
 
 function renderWelcome() {
@@ -287,11 +283,11 @@ function renderWelcome() {
       "",
       `${BOLD}Token Tracker${RESET}  ${color("Local-first usage across " + providerCount + " AI CLIs", DIM)}`,
       DIVIDER,
-      `${CYAN}Nothing leaves your machine — token counts only, never prompts or responses.${RESET}`,
+      `${CYAN}Only token counts and metadata are uploaded when a private account is configured.${RESET}`,
       DIVIDER,
       "",
       `  Tracks: ${providerLine}`,
-      `  Dashboard: http://localhost:7680`,
+      `  Dashboard: ${process.env.TOKENTRACKER_API_URL || 'deploy on Vercel (see docs/VERCEL.md)'}`,
       "",
     ].join("\n"),
   );
@@ -315,40 +311,15 @@ function renderLocalSuccess({ firstSync } = {}) {
 
   lines.push(
     "",
-    `  Dashboard: ${CYAN}http://localhost:7680${RESET}`,
+    `  Dashboard: ${process.env.TOKENTRACKER_API_URL || 'deploy on Vercel (see docs/VERCEL.md)'}`,
     "",
   );
   process.stdout.write(lines.join("\n"));
 }
 
-function renderAccountNotLinked({ context } = {}) {
-  if (context === "dry-run") {
-    process.stdout.write(
-      [
-        "",
-        "Dry run complete. Run init without --dry-run to apply changes.",
-        "",
-      ].join("\n"),
-    );
-    return;
-  }
-  renderLocalSuccess();
-}
-
-function shouldUseBrowserAuth({ deviceToken, opts }) {
-  if (deviceToken) return false;
-  if (opts.noAuth) return false;
-  if (opts.linkCode) return false;
-  if (opts.email || opts.password) return false;
-  return true;
-}
-
-async function buildDryRunSummary({ opts, home, trackerDir, notifyPath, runtime }) {
-  const deviceToken = runtime?.deviceToken || null;
-  const pendingBrowserAuth = shouldUseBrowserAuth({ deviceToken, opts });
+async function buildDryRunSummary({ home, trackerDir, notifyPath }) {
   const context = buildIntegrationTargets({ home, trackerDir, notifyPath });
-  const summary = await previewIntegrations({ context });
-  return { summary, pendingBrowserAuth, deviceToken };
+  return { summary: await previewIntegrations({ context }) };
 }
 
 async function runSetup({
@@ -358,19 +329,13 @@ async function runSetup({
   binDir,
   configPath,
   notifyOriginalPath,
-  linkCodeStatePath,
   notifyPath,
   appDir,
-  trackerBinPath,
-  runtime,
   existingConfig,
 }) {
   await ensureDir(trackerDir);
   await ensureDir(binDir);
-  let deviceToken = runtime?.deviceToken || null;
-  let deviceId = existingConfig?.deviceId || null;
   const installedAt = existingConfig?.installedAt || new Date().toISOString();
-  let pendingBrowserAuth = false;
 
   await installLocalTrackerApp({ appDir });
 
@@ -378,31 +343,7 @@ async function runSetup({
     existingConfig && typeof existingConfig === "object" && !Array.isArray(existingConfig)
       ? existingConfig
       : {};
-  const previousRuntime = resolveRuntimeConfig({ config: existingPlainConfig, env: {} });
-  const changedInstance = normalizeInstanceBaseUrl(previousRuntime.baseUrl) !== runtime.baseUrl ||
-    previousRuntime.anonKey !== runtime.anonKey;
-  if (changedInstance) {
-    resetInstanceState(trackerDir);
-    deviceToken = null; deviceId = null;
-  }
-  const config = {
-    ...(changedInstance ? clearDeviceIdentity(existingPlainConfig) : existingPlainConfig),
-    installedAt,
-    // Keep a persisted legacy URL until the first sync. sync owns the migration
-    // lock and must reset the upload offset/backoff before removing this marker;
-    // rewriting it here would skip the historical replay permanently.
-    baseUrl: opts.baseUrl || existingPlainConfig.baseUrl || DEFAULT_BASE_URL,
-  };
-  if (changedInstance || opts.dashboardUrl) {
-    config.dashboardUrl = runtime.dashboardUrl;
-  }
-  if (changedInstance || opts.anonKey || runtime.sources.anonKey === "env") config.anonKey = runtime.anonKey;
-  if (runtime.baseUrl !== DEFAULT_BASE_URL) {
-    config.baseUrl = runtime.baseUrl;
-    config.dashboardUrl = runtime.dashboardUrl;
-  }
-
-  await writeJson(configPath, config);
+  await writeJson(configPath, { ...existingPlainConfig, installedAt });
   await chmod600IfPossible(configPath);
 
   await writeNotifyHandler({ trackerDir, notifyPath });
@@ -415,13 +356,7 @@ async function runSetup({
     dryRun: Boolean(opts.dryRun),
   });
 
-  return {
-    summary,
-    pendingBrowserAuth,
-    deviceToken,
-    deviceId,
-    installedAt,
-  };
+  return { summary, installedAt };
 }
 
 async function writeNotifyHandler({ trackerDir, binDir, notifyPath, packageName = "tokentracker-cli" }) {
@@ -1405,36 +1340,12 @@ function containsNestedTokenTrackerNotify(cmd, expectedNotify) {
 }
 
 function parseArgs(argv) {
-  const out = {
-    baseUrl: null,
-    dashboardUrl: null,
-    anonKey: null,
-    anonKeyFile: null,
-    email: null,
-    password: null,
-    deviceName: null,
-    linkCode: null,
-    noAuth: false,
-    noOpen: false,
-    yes: false,
-    dryRun: false,
-  };
-
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === "--base-url") out.baseUrl = argv[++i] || null;
-    else if (a === "--dashboard-url") out.dashboardUrl = argv[++i] || null;
-    else if (a === "--anon-key") out.anonKey = argv[++i] || null;
-    else if (a === "--anon-key-file") out.anonKeyFile = argv[++i] || null;
-    else if (a === "--email") out.email = argv[++i] || null;
-    else if (a === "--password") out.password = argv[++i] || null;
-    else if (a === "--device-name") out.deviceName = argv[++i] || null;
-    else if (a === "--link-code") out.linkCode = argv[++i] || null;
-    else if (a === "--no-auth") out.noAuth = true;
-    else if (a === "--no-open") out.noOpen = true;
-    else if (a === "--yes") out.yes = true;
-    else if (a === "--dry-run") out.dryRun = true;
-    else throw new Error(`Unknown option: ${a}`);
+  const out = { noOpen: false, yes: false, dryRun: false };
+  for (const arg of argv) {
+    if (arg === "--no-open") out.noOpen = true;
+    else if (arg === "--yes") out.yes = true;
+    else if (arg === "--dry-run") out.dryRun = true;
+    else throw new Error(`Unknown option: ${arg}`);
   }
   return out;
 }
@@ -2273,18 +2184,19 @@ async function isDir(p) {
 }
 
 async function installLocalTrackerApp({ appDir }) {
-  // Test-only escape hatch: skip the ~10 MB runtime copy (src + dashboard/dist +
-  // node_modules) when a test only exercises hook/config/notify wiring. Copying
-  // the bundle per test case dominates the init test suite's wall time. Tests
-  // that assert on the copied runtime simply leave this unset.
+  // Test-only escape hatch: skip the ~10 MB runtime copy (src + node_modules)
+  // when a test only exercises hook/config/notify wiring. Copying the bundle per
+  // test case dominates the init test suite's wall time. Tests that assert on
+  // the copied runtime simply leave this unset.
   if (process.env.TOKENTRACKER_SKIP_LOCAL_RUNTIME_COPY === "1") return;
   // Copy the current package's runtime (bin + src) into ~/.tokentracker so notify can run sync without npx.
+  // The dashboard is served by the Vercel deployment, so no dashboard build
+  // output belongs in the local runtime.
   const packageRoot = path.resolve(__dirname, "../..");
   const srcFrom = path.join(packageRoot, "src");
   const binFrom = path.join(packageRoot, "bin", "tracker.js");
   const packageJsonFrom = path.join(packageRoot, "package.json");
   const nodeModulesFrom = path.join(packageRoot, "node_modules");
-  const dashboardDistFrom = path.join(packageRoot, "dashboard", "dist");
 
   // When running from the installed local runtime (or when appDir is symlinked to this package),
   // source and destination resolve to the same place. Do not delete appDir in that case.
@@ -2296,7 +2208,6 @@ async function installLocalTrackerApp({ appDir }) {
   const binToDir = path.join(appDir, "bin");
   const binTo = path.join(binToDir, "tracker.js");
   const nodeModulesTo = path.join(appDir, "node_modules");
-  const dashboardDistTo = path.join(appDir, "dashboard", "dist");
 
   await fs.rm(appDir, { recursive: true, force: true }).catch(() => {});
   await ensureDir(appDir);
@@ -2305,9 +2216,6 @@ async function installLocalTrackerApp({ appDir }) {
   await fs.copyFile(binFrom, binTo);
   await fs.chmod(binTo, 0o755).catch(() => {});
   await fs.copyFile(packageJsonFrom, path.join(appDir, "package.json")).catch(() => {});
-  if (await isDir(dashboardDistFrom)) {
-    await fs.cp(dashboardDistFrom, dashboardDistTo, { recursive: true });
-  }
   await copyRuntimeDependencies({ from: nodeModulesFrom, to: nodeModulesTo });
 }
 
@@ -2333,14 +2241,14 @@ async function safeRealpath(p) {
 const FIRST_SYNC_TIMEOUT_MS = 15_000;
 
 async function runFirstSyncAndRead({ trackerBinPath, trackerDir, packageName }) {
-  // Test-only escape hatch: skip spawning a real `sync --drain` subprocess when
+  // Test-only escape hatch: skip spawning a real `sync` subprocess when
   // a test only exercises init wiring. Returns the same shape derived from an
   // (empty) queue so callers behave identically without the ~1s spawn per case.
   if (process.env.TOKENTRACKER_SKIP_FIRST_SYNC === "1") {
     return readFirstSyncTotals(trackerDir);
   }
   const fallbackPkg = packageName || "tokentracker-cli";
-  const argv = ["sync", "--auto", "--drain"];
+  const argv = ["sync", "--auto"];
   const hasLocalRuntime = typeof trackerBinPath === "string" && fssync.existsSync(trackerBinPath);
   const cmd = hasLocalRuntime
     ? [process.execPath, trackerBinPath, ...argv]
