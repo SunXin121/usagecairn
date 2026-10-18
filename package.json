@@ -4,11 +4,11 @@
   "description": "Local AI token usage collector with a PostgreSQL-backed web dashboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xiufengsun/TokenTracker.git"
+    "url": "git+https://github.com/SunXin121/TokenTracker.git"
   },
-  "homepage": "https://github.com/xiufengsun/TokenTracker#readme",
+  "homepage": "https://github.com/SunXin121/TokenTracker#readme",
   "bugs": {
-    "url": "https://github.com/xiufengsun/TokenTracker/issues"
+    "url": "https://github.com/SunXin121/TokenTracker/issues"
   },
   "keywords": [
     "tokens",
