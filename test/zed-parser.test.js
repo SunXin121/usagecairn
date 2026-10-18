@@ -112,7 +112,8 @@ test("decodeZedThreadBlob falls back when native zstd is unavailable", async (t)
   const original = zlib.zstdDecompressSync;
   zlib.zstdDecompressSync = undefined;
   try {
-    assert.equal(await decodeZedThreadBlob({ dataType: "zstd", data: z }), '{"fallback":true}');
+    const blob = await zstdCompress(Buffer.from('{"fallback":true}'));
+    assert.equal(await decodeZedThreadBlob({ dataType: "zstd", data: blob }), '{"fallback":true}');
   } finally {
     zlib.zstdDecompressSync = original;
   }
