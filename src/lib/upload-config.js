@@ -25,7 +25,8 @@ function isValidApiUrl(value) {
 }
 
 function isValidAccessKey(value) {
-  return typeof value === "string" && /^tt_[a-f0-9]{64}$/.test(value);
+  // Any non-empty key is accepted; format is left to the operator.
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 /**
@@ -58,7 +59,7 @@ function readUploadConfig(queuePath) {
 
 function writeUploadConfig(queuePath, { apiUrl, accessKey }) {
   if (!isValidApiUrl(apiUrl)) throw new Error("API URL must be an HTTPS origin (or local HTTP)");
-  if (!isValidAccessKey(accessKey)) throw new Error("Access key must look like tt_<64 hex characters>");
+  if (!isValidAccessKey(accessKey)) throw new Error("Access key must be a non-empty string");
   const target = configPathFor(queuePath);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   const temp = `${target}.${process.pid}.tmp`;

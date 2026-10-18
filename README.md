@@ -4,7 +4,7 @@
 
 Collect AI coding token usage locally, upload scalar counts to PostgreSQL through Vercel functions, and view your private usage dashboard. Prompts and message bodies are never uploaded. Single-user by design: one access key from the environment, no accounts.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
 [![npm](https://img.shields.io/npm/v/tokentracker-cli.svg)](https://www.npmjs.com/package/tokentracker-cli)
 
 ![Usage dashboard](docs/screenshots/dashboard-usage-light.png)
@@ -15,7 +15,7 @@ Collect AI coding token usage locally, upload scalar counts to PostgreSQL throug
 
 Click **Deploy with Vercel** above, or follow [Vercel deployment](docs/VERCEL.md). The button clones this repo into your account and asks for one **server-only** environment variable:
 
-- `ACCESS_KEY` — your private key in the `tt_<64 hex>` form, e.g. `tt_` + the output of `openssl rand -hex 32`. Uploads and the dashboard both authenticate with this one key.
+- `ACCESS_KEY` — your private access key, any non-empty string. Uploads and the dashboard both authenticate with this one key.
 
 The database needs no environment variable: after the deploy, attach a PostgreSQL database in the project's **Storage** tab (Neon or any Vercel Postgres integration) and Vercel injects `DATABASE_URL` automatically. Then, once per database, apply the schema:
 
@@ -29,7 +29,7 @@ There is no account system and nothing to provision in a database — rotating t
 
 ```bash
 npx tokentracker-cli@latest init --yes
-npx tokentracker-cli@latest connect --api-url https://your-project.vercel.app --key tt_…
+npx tokentracker-cli@latest connect --api-url https://your-project.vercel.app --key <your key>
 npx tokentracker-cli@latest sync
 ```
 
@@ -39,7 +39,7 @@ npx tokentracker-cli@latest sync
 
 ### 3. Open the dashboard
 
-Open the deployed site and enter the same `tt_…` key — the browser keeps it in session storage only.
+Open the deployed site and enter the same access key — the browser keeps it in session storage only.
 
 ## Updates and automation
 

@@ -31,7 +31,9 @@ async function cmdConnect(argv, { queuePath = defaultQueuePath(), log = console.
     return { stored: true, apiUrl: stored.apiUrl };
   }
   if (!opts.apiUrl || !opts.key) throw new Error("Both --api-url and --key are required");
-  const target = writeUploadConfig(queuePath, { apiUrl: opts.apiUrl, accessKey: opts.key.trim() });
+  const accessKey = opts.key.trim();
+  if (!accessKey) throw new Error("Access key must be a non-empty string");
+  const target = writeUploadConfig(queuePath, { apiUrl: opts.apiUrl, accessKey });
   log(`Saved upload credentials to ${target} (mode 600). Background sync now uploads automatically.`);
   return { saved: true, target };
 }

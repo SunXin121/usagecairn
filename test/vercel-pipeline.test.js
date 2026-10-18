@@ -56,7 +56,7 @@ test('local ledger → retried upload → PostgreSQL → authenticated dashboard
   } finally { await db.close(); await fs.rm(directory, { recursive: true, force: true }); }
 });
 
-test('a missing or malformed server key fails closed with 503', async () => {
+test('a missing or empty server key fails closed with 503', async () => {
   const db = new PGlite();
   try {
     await db.exec(await fs.readFile(path.join(__dirname, '../server/schema.sql'), 'utf8'));
@@ -65,7 +65,7 @@ test('a missing or malformed server key fails closed with 503', async () => {
     try {
       delete process.env.ACCESS_KEY;
       assert.equal((await request(handler, '/api/usage')).statusCode, 503);
-      process.env.ACCESS_KEY = 'not-a-key';
+      process.env.ACCESS_KEY = '  ';
       assert.equal((await request(handler, '/api/usage')).statusCode, 503);
     } finally { process.env.ACCESS_KEY = previous; }
   } finally { await db.close(); }

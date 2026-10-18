@@ -219,7 +219,7 @@ export default function App() {
   };
   const saveKey = (event) => {
     event.preventDefault();
-    if (!/^tt_[a-f0-9]{64}$/.test(draft.trim())) { setError('访问密钥格式不正确'); return; }
+    if (!draft.trim()) { setError('请输入访问密钥'); return; }
     requestId.current++;
     window.sessionStorage.setItem(KEY, draft.trim());
     setKey(draft.trim()); setUsage(null); setDraft(''); setError('');

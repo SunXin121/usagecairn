@@ -2,7 +2,7 @@
 
 本地采集 AI 编码工具的 token 用量，上传到 Vercel 上的 PostgreSQL，并在用量看板查看。不会上传提示词或消息正文。单用户设计：一个环境变量密钥即可鉴权，没有账号体系。
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
 [![npm](https://img.shields.io/npm/v/tokentracker-cli.svg)](https://www.npmjs.com/package/tokentracker-cli)
 
 ![用量看板](docs/screenshots/dashboard-usage-light.png)
@@ -13,7 +13,7 @@
 
 点上面的 **Deploy with Vercel**，或按 [部署说明](docs/VERCEL.md) 手动部署。按钮会把仓库克隆到你自己的 GitHub 账号、按 `vercel.json` 建好 Vercel 项目，并要求填写一个仅服务端使用的环境变量：
 
-- `ACCESS_KEY` —— 你的私有密钥，格式 `tt_<64 位十六进制>`，例如 `tt_` + `openssl rand -hex 32` 的输出。上传和看板都用这一个密钥鉴权。
+- `ACCESS_KEY` —— 你的私有访问密钥，任意非空字符串均可。上传和看板都用这一个密钥鉴权。
 
 数据库不需要设环境变量：部署完成后，在项目的 **Storage** 页签挂一个 PostgreSQL 数据库（Neon 或任意 Vercel Postgres 集成），Vercel 会自动注入 `DATABASE_URL`。然后对该数据库执行一次初始化：
 
@@ -27,7 +27,7 @@ psql "$DATABASE_URL" -f server/schema.sql   # 也可以把 server/schema.sql 贴
 
 ```bash
 npx tokentracker-cli@latest init --yes
-npx tokentracker-cli@latest connect --api-url https://你的项目.vercel.app --key tt_…
+npx tokentracker-cli@latest connect --api-url https://你的项目.vercel.app --key <your key>
 npx tokentracker-cli@latest sync
 ```
 
@@ -37,7 +37,7 @@ npx tokentracker-cli@latest sync
 
 ### 3. 打开看板
 
-打开部署站点，输入同一个 `tt_…` 密钥 —— 浏览器只把它放在 session storage 里。
+打开部署站点，输入同一个访问密钥 —— 浏览器只把它放在 session storage 里。
 
 ## 更新与自动化
 

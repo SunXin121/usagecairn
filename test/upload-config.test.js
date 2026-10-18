@@ -49,14 +49,15 @@ test('persisted credentials let background hooks upload without env vars', async
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
 
-test('connect rejects unsafe URLs and malformed keys, and can clear credentials', async () => {
+test('connect rejects unsafe URLs and empty keys, accepts any key format, and can clear credentials', async () => {
   const { dir, queuePath } = await sandbox();
   try {
     await assert.rejects(cmdConnect(['--api-url', 'http://tracker.example.com', '--key', key], { queuePath, log: () => {} }), /HTTPS origin/);
-    await assert.rejects(cmdConnect(['--api-url', 'https://tracker.example.com', '--key', 'nope'], { queuePath, log: () => {} }), /tt_/);
+    await assert.rejects(cmdConnect(['--api-url', 'https://tracker.example.com', '--key', '  '], { queuePath, log: () => {} }), /non-empty/);
+    await assert.rejects(cmdConnect(['--api-url', 'https://tracker.example.com', '--key', ''], { queuePath, log: () => {} }), /required|non-empty/);
     assert.equal(isValidApiUrl('https://user:pw@example.com'), false);
     assert.equal(isValidApiUrl('https://example.com/path'), false);
-    await cmdConnect(['--api-url', 'https://tracker.example.com', '--key', key], { queuePath, log: () => {} });
+    await cmdConnect(['--api-url', 'https://tracker.example.com', '--key', 'my-custom-key-2026'], { queuePath, log: () => {} });
     assert.equal((await cmdConnect(['--clear'], { queuePath, log: () => {} })).cleared, true);
     assert.deepEqual(await readUploadConfig(queuePath), { apiUrl: null, accessKey: null });
     await assert.rejects(uploadQueue({ queuePath, env: {}, request: async () => ({ ok: true, status: 200 }) }), /tracker connect/);

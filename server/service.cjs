@@ -31,16 +31,17 @@ function send(res, status, value) {
   res.end(JSON.stringify(value));
 }
 // Single-user deployment: the one expected key comes from the environment, not
-// from a database accounts table. Compare SHA-256 digests with timingSafeEqual.
+// from a database accounts table. Any non-empty key is accepted; compare
+// SHA-256 digests with timingSafeEqual.
 function expectedKeyDigest() {
   const key = process.env.ACCESS_KEY;
-  if (typeof key !== 'string' || !/^tt_[a-f0-9]{64}$/.test(key)) return null;
+  if (typeof key !== 'string' || key.trim() === '') return null;
   return createHash('sha256').update(key).digest();
 }
 function authorized(req) {
   const digest = expectedKeyDigest();
   if (!digest) return false;
-  const token = /^Bearer (tt_[a-f0-9]{64})$/.exec(req.headers.authorization || '')?.[1];
+  const token = /^Bearer (.+)$/.exec(req.headers.authorization || '')?.[1];
   if (!token) return false;
   return timingSafeEqual(createHash('sha256').update(token).digest(), digest);
 }
@@ -90,7 +91,7 @@ function createHandler(pool) {
   return async function handler(req, res) {
     try {
       if (!expectedKeyDigest()) {
-        console.error('[api] ACCESS_KEY is missing or malformed (expected tt_<64 hex>)');
+        console.error('[api] ACCESS_KEY is missing or empty');
         return send(res, 503, { error: 'Server misconfigured' });
       }
       if (!authorized(req)) return send(res, 401, { error: 'Access key required' });

@@ -6,7 +6,7 @@ The repo root is the Vercel project root. `vercel.json` installs the root and da
 
 ## One-click deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
 
 The button clones this repo into your own account, creates a project named `tokentracker`, and prompts for the one **server-only** environment variable, `ACCESS_KEY`. After the deploy, attach the database in the project's **Storage** tab (which injects `DATABASE_URL` automatically) and apply [`server/schema.sql`](../server/schema.sql) once in the database SQL editor — there is no other provisioning step. The numbered steps below are the manual equivalent of the button.
 
@@ -14,7 +14,7 @@ The button clones this repo into your own account, creates a project named `toke
 
 1. Import this repo in Vercel (New Project → import the GitHub repo, framework preset **Other**, root directory `.`). Build/install commands and output directory come from `vercel.json`.
 2. Set one **server-only** environment variable on the project (Production + Preview + Development):
-   - `ACCESS_KEY` — your private key in the form `tt_<64 lowercase hex>`, e.g. `tt_$(openssl rand -hex 32)`. The server hashes it with SHA-256 and compares with `timingSafeEqual`; it never appears in the database or logs. Uploads (`POST /api/ingest`) and the dashboard (`GET /api/usage`) both authenticate with `Authorization: Bearer tt_…`. Rotating the key is just editing this variable and redeploying.
+   - `ACCESS_KEY` — your private access key, any non-empty string. The server hashes it with SHA-256 and compares with `timingSafeEqual`; it never appears in the database or logs. Uploads (`POST /api/ingest`) and the dashboard (`GET /api/usage`) both authenticate with `Authorization: Bearer <key>`. Rotating the key is just editing this variable and redeploying.
 3. Attach a PostgreSQL database in the project's **Storage** tab (Marketplace integration, e.g. Neon). Vercel injects `DATABASE_URL` into the functions automatically — you never paste a connection string. Use the integration's SQL editor (or `psql` with its connection string) to run [`server/schema.sql`](../server/schema.sql) once; it creates `usage_buckets` and `account_session_states`, and there is no accounts table.
 
 Never prefix `ACCESS_KEY` with `VITE_` or put it in frontend configuration. Requests without a valid key get `401`; if the key is missing or malformed the API answers `503` instead of silently opening up.
@@ -27,7 +27,7 @@ Once the repo is imported, Vercel's Git integration redeploys the server on ever
 
 ```bash
 npx tokentracker-cli@latest init --yes
-npx tokentracker-cli@latest connect --api-url https://<deployment>.vercel.app --key tt_…
+npx tokentracker-cli@latest connect --api-url https://<deployment>.vercel.app --key <your key>
 npx tokentracker-cli@latest sync
 ```
 
@@ -37,10 +37,10 @@ npx tokentracker-cli@latest sync
 
 ## API
 
-`GET /api/usage?from=YYYY-MM-DD&to=YYYY-MM-DD` returns UTC daily/model totals and estimated USD cost. The date interval is at most 10 years. `POST /api/ingest` accepts up to 200 numeric usage buckets/session states per request. Both require `Authorization: Bearer tt_…` matching the server's `ACCESS_KEY`. A `(device, source, model, hour)` bucket carries the source-file modification time and queue byte position, so an older replay cannot overwrite a newer snapshot; identical replays are idempotent. Cursor usage is deduplicated across devices by the largest whole snapshot; TRAE CN uses per-session freshness instead of summing mirrored device buckets. Requests carry only timestamps, source/model names, session IDs for TRAE CN, scalar costs and token counters — never prompts or messages.
+`GET /api/usage?from=YYYY-MM-DD&to=YYYY-MM-DD` returns UTC daily/model totals and estimated USD cost. The date interval is at most 10 years. `POST /api/ingest` accepts up to 200 numeric usage buckets/session states per request. Both require `Authorization: Bearer <key>` matching the server's `ACCESS_KEY`. A `(device, source, model, hour)` bucket carries the source-file modification time and queue byte position, so an older replay cannot overwrite a newer snapshot; identical replays are idempotent. Cursor usage is deduplicated across devices by the largest whole snapshot; TRAE CN uses per-session freshness instead of summing mirrored device buckets. Requests carry only timestamps, source/model names, session IDs for TRAE CN, scalar costs and token counters — never prompts or messages.
 
 ## Local verification
 
-`npm run ci:local` runs collector/parser tests, an in-memory PostgreSQL (PGlite) schema→upload→read test (including the env-key authentication paths), browser component tests and a production dashboard build. This requires no cloud account. For interactive local development, attach a real PostgreSQL integration (or export a `DATABASE_URL` pointing at one) and export `ACCESS_KEY=tt_…`, then run `npx vercel dev --listen 3000` in the repo root, and `npm run dashboard:dev` in another terminal (Vite proxies `/api` to port 3000). A real Postgres connection is needed only for manual API testing; tests use PGlite.
+`npm run ci:local` runs collector/parser tests, an in-memory PostgreSQL (PGlite) schema→upload→read test (including the env-key authentication paths), browser component tests and a production dashboard build. This requires no cloud account. For interactive local development, attach a real PostgreSQL integration (or export a `DATABASE_URL` pointing at one) and export `ACCESS_KEY=<your key>`, then run `npx vercel dev --listen 3000` in the repo root, and `npm run dashboard:dev` in another terminal (Vite proxies `/api` to port 3000). A real Postgres connection is needed only for manual API testing; tests use PGlite.
 
 **Operational note:** the CLI keeps an append-only local queue and replays it on each upload. Large histories can take longer; a failed request leaves the queue untouched. Cost uses the repository's model pricing snapshot; unavailable model prices are displayed as $0 estimates, not proof that the provider is free.
