@@ -2,7 +2,7 @@
 
 本地采集 AI 编码工具的 token 用量，上传到 Vercel 上的 PostgreSQL，并在用量看板查看。不会上传提示词或消息正文。单用户设计：一个环境变量密钥即可鉴权，没有账号体系。
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=DATABASE_URL%2CTOKENTRACKER_ACCESS_KEY&envDescription=DATABASE_URL%3A%20PostgreSQL%20connection%20string%20%28Neon%20or%20any%20Vercel%20Postgres%20integration%29.%20TOKENTRACKER_ACCESS_KEY%3A%20your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Both%20are%20server-only%3A%20never%20prefix%20them%20with%20VITE_.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
 [![npm](https://img.shields.io/npm/v/tokentracker-cli.svg)](https://www.npmjs.com/package/tokentracker-cli)
 
 ![用量看板](docs/screenshots/dashboard-usage-light.png)
@@ -11,12 +11,11 @@
 
 ### 1. 部署服务端
 
-点上面的 **Deploy with Vercel**，或按 [部署说明](docs/VERCEL.md) 手动部署。按钮会把仓库克隆到你自己的 GitHub 账号、按 `vercel.json` 建好 Vercel 项目，并要求填写两个仅服务端使用的环境变量：
+点上面的 **Deploy with Vercel**，或按 [部署说明](docs/VERCEL.md) 手动部署。按钮会把仓库克隆到你自己的 GitHub 账号、按 `vercel.json` 建好 Vercel 项目，并要求填写一个仅服务端使用的环境变量：
 
-- `DATABASE_URL` —— PostgreSQL 连接串（免费的 Neon 即可，有 pooled URL 就用 pooled）。
-- `TOKENTRACKER_ACCESS_KEY` —— 你的私有密钥，格式 `tt_<64 位十六进制>`，例如 `tt_` + `openssl rand -hex 32` 的输出。上传和看板都用这一个密钥鉴权。
+- `ACCESS_KEY` —— 你的私有密钥，格式 `tt_<64 位十六进制>`，例如 `tt_` + `openssl rand -hex 32` 的输出。上传和看板都用这一个密钥鉴权。
 
-部署完成后对该数据库执行一次初始化：
+数据库不需要设环境变量：部署完成后，在项目的 **Storage** 页签挂一个 PostgreSQL 数据库（Neon 或任意 Vercel Postgres 集成），Vercel 会自动注入 `DATABASE_URL`。然后对该数据库执行一次初始化：
 
 ```bash
 psql "$DATABASE_URL" -f server/schema.sql   # 也可以把 server/schema.sql 贴进 SQL 编辑器执行
@@ -34,7 +33,7 @@ npx tokentracker-cli@latest sync
 
 `init` 会把一份自包含运行时（`bin` + `src` + 运行期依赖）复制到 `~/.tokentracker/app`，并写入无第三方依赖的 `~/.tokentracker/bin/notify.cjs`；各 provider 钩子因此直接运行 `node ~/.tokentracker/app/bin/tracker.js`，不依赖 npx 缓存（只有该副本缺失时才回退到 `npx --yes tokentracker-cli sync --auto`）。不需要全局安装。想常驻一个命令就 `npm i -g tokentracker-cli`，之后去掉 `npx` 前缀（`tokentracker init --yes` 等）。
 
-`connect` 把上传目标写入 `~/.tokentracker/tracker/upload.json`（权限 600），后台 hook 因此无需修改 shell 配置即可上传；`TOKENTRACKER_API_URL` / `TOKENTRACKER_ACCESS_KEY` 仍可按次覆盖。`sync` 采集并上传，`upload` 重放已有本地记录，`status` 查看队列/积压/上传诊断。
+`connect` 把上传目标写入 `~/.tokentracker/tracker/upload.json`（权限 600），后台 hook 因此无需修改 shell 配置即可上传；采集端的 `TOKENTRACKER_API_URL` / `TOKENTRACKER_ACCESS_KEY` 仍可按次覆盖。`sync` 采集并上传，`upload` 重放已有本地记录，`status` 查看队列/积压/上传诊断。
 
 ### 3. 打开看板
 

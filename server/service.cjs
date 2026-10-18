@@ -33,7 +33,7 @@ function send(res, status, value) {
 // Single-user deployment: the one expected key comes from the environment, not
 // from a database accounts table. Compare SHA-256 digests with timingSafeEqual.
 function expectedKeyDigest() {
-  const key = process.env.TOKENTRACKER_ACCESS_KEY;
+  const key = process.env.ACCESS_KEY;
   if (typeof key !== 'string' || !/^tt_[a-f0-9]{64}$/.test(key)) return null;
   return createHash('sha256').update(key).digest();
 }
@@ -90,7 +90,7 @@ function createHandler(pool) {
   return async function handler(req, res) {
     try {
       if (!expectedKeyDigest()) {
-        console.error('[api] TOKENTRACKER_ACCESS_KEY is missing or malformed (expected tt_<64 hex>)');
+        console.error('[api] ACCESS_KEY is missing or malformed (expected tt_<64 hex>)');
         return send(res, 503, { error: 'Server misconfigured' });
       }
       if (!authorized(req)) return send(res, 401, { error: 'Access key required' });

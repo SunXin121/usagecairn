@@ -4,7 +4,7 @@
 
 Collect AI coding token usage locally, upload scalar counts to PostgreSQL through Vercel functions, and view your private usage dashboard. Prompts and message bodies are never uploaded. Single-user by design: one access key from the environment, no accounts.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=DATABASE_URL%2CTOKENTRACKER_ACCESS_KEY&envDescription=DATABASE_URL%3A%20PostgreSQL%20connection%20string%20%28Neon%20or%20any%20Vercel%20Postgres%20integration%29.%20TOKENTRACKER_ACCESS_KEY%3A%20your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Both%20are%20server-only%3A%20never%20prefix%20them%20with%20VITE_.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20tt_%3C64%20hex%3E%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
 [![npm](https://img.shields.io/npm/v/tokentracker-cli.svg)](https://www.npmjs.com/package/tokentracker-cli)
 
 ![Usage dashboard](docs/screenshots/dashboard-usage-light.png)
@@ -13,12 +13,11 @@ Collect AI coding token usage locally, upload scalar counts to PostgreSQL throug
 
 ### 1. Deploy the server
 
-Click **Deploy with Vercel** above, or follow [Vercel deployment](docs/VERCEL.md). The button clones this repo into your account and asks for two **server-only** environment variables:
+Click **Deploy with Vercel** above, or follow [Vercel deployment](docs/VERCEL.md). The button clones this repo into your account and asks for one **server-only** environment variable:
 
-- `DATABASE_URL` — a PostgreSQL connection string (a free Neon database works; prefer the pooled URL).
-- `TOKENTRACKER_ACCESS_KEY` — your private key in the `tt_<64 hex>` form, e.g. `tt_` + the output of `openssl rand -hex 32`. Uploads and the dashboard both authenticate with this one key.
+- `ACCESS_KEY` — your private key in the `tt_<64 hex>` form, e.g. `tt_` + the output of `openssl rand -hex 32`. Uploads and the dashboard both authenticate with this one key.
 
-Then, once per deployment, apply the schema to that database:
+The database needs no environment variable: after the deploy, attach a PostgreSQL database in the project's **Storage** tab (Neon or any Vercel Postgres integration) and Vercel injects `DATABASE_URL` automatically. Then, once per database, apply the schema:
 
 ```bash
 psql "$DATABASE_URL" -f server/schema.sql   # or paste server/schema.sql into the SQL editor
@@ -36,7 +35,7 @@ npx tokentracker-cli@latest sync
 
 `init` copies a self-contained runtime (`bin` + `src` + runtime dependencies) to `~/.tokentracker/app` and writes a dependency-free `~/.tokentracker/bin/notify.cjs` handler, so the provider hooks run `node ~/.tokentracker/app/bin/tracker.js` and never depend on the npx cache — the handler only falls back to `npx --yes tokentracker-cli sync --auto` if that copy is missing. No global install is needed. Prefer a permanent command? `npm i -g tokentracker-cli`, then drop the `npx` prefix (`tokentracker init --yes`, …).
 
-`connect` persists the upload target in `~/.tokentracker/tracker/upload.json` with mode `600`, so background hook-spawned syncs upload without shell-profile changes; `TOKENTRACKER_API_URL` / `TOKENTRACKER_ACCESS_KEY` still override it per invocation. `sync` collects usage and uploads it, `upload` replays existing local history, `status` prints queue/backlog/upload diagnostics.
+`connect` persists the upload target in `~/.tokentracker/tracker/upload.json` with mode `600`, so background hook-spawned syncs upload without shell-profile changes; the collector-side `TOKENTRACKER_API_URL` / `TOKENTRACKER_ACCESS_KEY` still override it per invocation. `sync` collects usage and uploads it, `upload` replays existing local history, `status` prints queue/backlog/upload diagnostics.
 
 ### 3. Open the dashboard
 

@@ -5,7 +5,7 @@ const { PGlite } = require('@electric-sql/pglite');
 const { createHandler } = require('../server/service.cjs');
 
 const key = `tt_${'a'.repeat(64)}`;
-process.env.TOKENTRACKER_ACCESS_KEY = key;
+process.env.ACCESS_KEY = key;
 const bucket = (source, total, hour = '2026-10-18T23:30:00Z') => ({ source, model: 'gpt-5', hour_start: hour,
   input_tokens: total - 20, output_tokens: 20, total_tokens: total, conversation_count: 1 });
 function call(handler, url, method = 'GET', body) {

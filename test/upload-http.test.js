@@ -10,7 +10,7 @@ const { uploadQueue } = require('../src/commands/upload');
 const { writeUploadConfig } = require('../src/lib/upload-config');
 
 const key = `tt_${'d'.repeat(64)}`;
-process.env.TOKENTRACKER_ACCESS_KEY = key;
+process.env.ACCESS_KEY = key;
 
 async function startServer() {
   const db = new PGlite();

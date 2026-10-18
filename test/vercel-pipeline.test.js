@@ -10,7 +10,7 @@ const { readQueueBatch } = require('../src/lib/queue-batch');
 
 const tokenA = `tt_${'a'.repeat(64)}`;
 const tokenB = `tt_${'b'.repeat(64)}`;
-process.env.TOKENTRACKER_ACCESS_KEY = tokenA;
+process.env.ACCESS_KEY = tokenA;
 function response() {
   return { headers: {}, setHeader(k, v) { this.headers[k] = v; }, end(text) { this.body = JSON.parse(text); } };
 }
@@ -61,12 +61,12 @@ test('a missing or malformed server key fails closed with 503', async () => {
   try {
     await db.exec(await fs.readFile(path.join(__dirname, '../server/schema.sql'), 'utf8'));
     const handler = createHandler({ query: (...args) => db.query(...args), connect: async () => ({ query: (...args) => db.query(...args), release() {} }) });
-    const previous = process.env.TOKENTRACKER_ACCESS_KEY;
+    const previous = process.env.ACCESS_KEY;
     try {
-      delete process.env.TOKENTRACKER_ACCESS_KEY;
+      delete process.env.ACCESS_KEY;
       assert.equal((await request(handler, '/api/usage')).statusCode, 503);
-      process.env.TOKENTRACKER_ACCESS_KEY = 'not-a-key';
+      process.env.ACCESS_KEY = 'not-a-key';
       assert.equal((await request(handler, '/api/usage')).statusCode, 503);
-    } finally { process.env.TOKENTRACKER_ACCESS_KEY = previous; }
+    } finally { process.env.ACCESS_KEY = previous; }
   } finally { await db.close(); }
 });

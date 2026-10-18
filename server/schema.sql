@@ -1,5 +1,5 @@
 -- Apply once to a Vercel-integrated PostgreSQL database (Neon or equivalent).
--- Single-user deployment: authentication is the TOKENTRACKER_ACCESS_KEY
+-- Single-user deployment: authentication is the ACCESS_KEY
 -- environment variable, so there is no accounts table.
 CREATE TABLE IF NOT EXISTS usage_buckets (
   device_id text NOT NULL,
