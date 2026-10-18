@@ -43,7 +43,7 @@ function turn(overrides = {}) {
 }
 
 function fixture(t) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tokentracker-trae-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "token-pulse-trae-"));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   const dbPath = path.join(dir, "history.db");
   fs.writeFileSync(dbPath, "synthetic-database");
@@ -513,7 +513,7 @@ test("TRAE parser persists no raw identifiers, conversation content, or decrypti
     turn_id: canaries[2],
     context: { messages: [{ text: canaries[3] }] },
     usage: { ...usage(), prompt: canaries[3] },
-  })], { env: { TOKENTRACKER_TRAE_SQLCIPHER_KEY: canaries[4] } });
+  })], { env: { TOKEN_PULSE_TRAE_SQLCIPHER_KEY: canaries[4] } });
   assert.equal(latest(f.queuePath).total_tokens, 110);
   const persisted = fs.readFileSync(f.queuePath, "utf8") + JSON.stringify(f.cursors);
   for (const canary of canaries) assert.ok(!persisted.includes(canary), `does not persist ${canary}`);

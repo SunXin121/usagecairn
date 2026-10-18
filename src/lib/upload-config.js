@@ -6,7 +6,7 @@ const path = require("node:path");
 const FILE = "upload.json";
 
 function defaultQueuePath() {
-  return path.join(os.homedir(), ".tokentracker", "tracker", "queue.jsonl");
+  return path.join(os.homedir(), ".token-pulse", "tracker", "queue.jsonl");
 }
 
 function configPathFor(queuePath) {
@@ -36,13 +36,13 @@ function isValidAccessKey(value) {
  */
 function resolveUploadConfig({ queuePath, env = process.env } = {}) {
   const fileConfig = readUploadConfig(queuePath);
-  const apiUrl = env.TOKENTRACKER_API_URL || fileConfig.apiUrl || null;
-  const accessKey = env.TOKENTRACKER_ACCESS_KEY || fileConfig.accessKey || null;
+  const apiUrl = env.TOKEN_PULSE_API_URL || fileConfig.apiUrl || null;
+  const accessKey = env.TOKEN_PULSE_ACCESS_KEY || fileConfig.accessKey || null;
   if (!apiUrl || !accessKey) return { apiUrl: null, accessKey: null, source: null };
   if (!isValidApiUrl(apiUrl) || !isValidAccessKey(accessKey)) {
     return { apiUrl: null, accessKey: null, source: null, invalid: true };
   }
-  return { apiUrl: new URL(apiUrl).origin, accessKey, source: env.TOKENTRACKER_API_URL ? "env" : "file" };
+  return { apiUrl: new URL(apiUrl).origin, accessKey, source: env.TOKEN_PULSE_API_URL ? "env" : "file" };
 }
 
 function readUploadConfig(queuePath) {

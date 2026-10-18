@@ -5,7 +5,7 @@ const { promisify } = require("node:util");
 const warnedSqliteReadFailures = new Set();
 
 function isDebugEnabled(env = process.env) {
-  const value = String((env && env.TOKENTRACKER_DEBUG) || "").toLowerCase();
+  const value = String((env && env.TOKEN_PULSE_DEBUG) || "").toLowerCase();
   return value === "1" || value === "true";
 }
 
@@ -22,11 +22,11 @@ function warnSqliteUnavailable({ dbPath, label, cliError, nodeSqliteError, env, 
   const out = stderr && typeof stderr.write === "function" ? stderr : process.stderr;
   const displayLabel = label || "local";
   out.write(
-    `[tokentracker] Cannot read ${displayLabel} SQLite database. Install sqlite3 CLI and add it to PATH, or use Node.js 22+ with node:sqlite support. Path: ${dbPath}\n`,
+    `[token-pulse] Cannot read ${displayLabel} SQLite database. Install sqlite3 CLI and add it to PATH, or use Node.js 22+ with node:sqlite support. Path: ${dbPath}\n`,
   );
   if (isDebugEnabled(env)) {
-    out.write(`[tokentracker] sqlite3 CLI failed: ${formatError(cliError)}\n`);
-    out.write(`[tokentracker] node:sqlite failed: ${formatError(nodeSqliteError)}\n`);
+    out.write(`[token-pulse] sqlite3 CLI failed: ${formatError(cliError)}\n`);
+    out.write(`[token-pulse] node:sqlite failed: ${formatError(nodeSqliteError)}\n`);
   }
 }
 

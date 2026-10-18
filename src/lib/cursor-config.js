@@ -46,7 +46,7 @@ const CURSOR_ACCESS_TOKEN_SQL =
   "SELECT value FROM ItemTable WHERE key = 'cursorAuth/accessToken';";
 
 function cursorDebugLog(message, env = process.env) {
-  const dbg = String((env && env.TOKENTRACKER_DEBUG) || "").toLowerCase();
+  const dbg = String((env && env.TOKEN_PULSE_DEBUG) || "").toLowerCase();
   if (dbg === "1" || dbg === "true") {
     process.stderr.write(`[cursor] ${message}\n`);
   }
@@ -506,7 +506,7 @@ function parseCursorCsv(csvText) {
 }
 
 /**
- * Normalize a Cursor CSV record to TokenTracker's standard token format.
+ * Normalize a Cursor CSV record to TokenPulse's standard token format.
  */
 function normalizeCursorUsage(record) {
   const inputTokens = Math.max(0, Math.floor(record.inputTokens || 0));

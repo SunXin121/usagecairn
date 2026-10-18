@@ -14,7 +14,7 @@ const {
 } = require("../src/lib/rollout");
 
 function tempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "tokentracker-qoder-new-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "token-pulse-qoder-new-"));
 }
 
 function tempQueue() {

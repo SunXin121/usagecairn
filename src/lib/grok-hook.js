@@ -3,11 +3,11 @@ const path = require("node:path");
 const fs = require("node:fs/promises");
 const fssync = require("node:fs");
 
-const GROK_HOOK_FILENAME = "99-tokentracker-usage.json";
+const GROK_HOOK_FILENAME = "99-token-pulse-usage.json";
 
 function resolveGrokHome(env = process.env) {
-  if (env.TOKENTRACKER_GROK_HOME && env.TOKENTRACKER_GROK_HOME.length > 0) {
-    return env.TOKENTRACKER_GROK_HOME;
+  if (env.TOKEN_PULSE_GROK_HOME && env.TOKEN_PULSE_GROK_HOME.length > 0) {
+    return env.TOKEN_PULSE_GROK_HOME;
   }
   if (env.GROK_HOME && env.GROK_HOME.length > 0) {
     return env.GROK_HOME;
@@ -113,7 +113,7 @@ const path = require('node:path');
 const os = require('node:os');
 const readline = require('node:readline');
 
-const GROK_HOME = process.env.TOKENTRACKER_GROK_HOME || process.env.GROK_HOME || path.join(os.homedir(), '.grok');
+const GROK_HOME = process.env.TOKEN_PULSE_GROK_HOME || process.env.GROK_HOME || path.join(os.homedir(), '.grok');
 const SESSION_ID = process.env.GROK_SESSION_ID;
 const WORKSPACE_ROOT = process.env.GROK_WORKSPACE_ROOT || process.cwd();
 
@@ -229,7 +229,7 @@ if (totalTokens <= 0) {
   process.exit(0);
 }
 
-// Write a signal that the TokenTracker sync / local API can pick up
+// Write a signal that the TokenPulse sync / local API can pick up
 const trackerDir = ${JSON.stringify(trackerDir)};
 const signalDir = trackerDir;
 try { fs.mkdirSync(signalDir, { recursive: true }); } catch {}

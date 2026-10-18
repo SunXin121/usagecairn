@@ -6,7 +6,7 @@ const fs = require("node:fs/promises");
 const fssync = require("node:fs");
 const pkg = require("../../package.json");
 const { readJson } = require("../lib/fs");
-const { resolveTrackerPaths } = require("../lib/tracker-paths");
+const { resolveTrackerPaths } = require("../lib/pulse-paths");
 const { resolveUploadConfig, defaultQueuePath } = require("../lib/upload-config");
 const { formatBytes } = require("../lib/progress");
 const {
@@ -99,13 +99,13 @@ function renderText(status) {
   const upload = status.upload.configured
     ? `${status.upload.api_url} (${status.upload.source})`
     : status.upload.invalid
-      ? "invalid credentials (run: tracker connect)"
-      : "not configured (run: tracker connect)";
+      ? "invalid credentials (run: token-pulse connect)"
+      : "not configured (run: token-pulse connect)";
   const detected = Object.entries(status.providers || {})
     .filter(([, value]) => value.installed)
     .map(([name]) => name);
   return [
-    `TokenTracker v${status.version}`,
+    `TokenPulse v${status.version}`,
     "Status:",
     `- Upload: ${upload}`,
     `- Queue: ${formatBytes(status.queue.pending_bytes)} pending / ${formatBytes(status.queue.size_bytes)} total`,

@@ -2,7 +2,7 @@
 
 // Grok's ACP turn_completed.usage uses camelCase fields. In that shape,
 // inputTokens is the whole prompt (cache reads/writes included) and
-// outputTokens includes reasoningTokens. TokenTracker stores mutually
+// outputTokens includes reasoningTokens. TokenPulse stores mutually
 // exclusive columns, so both reported totals need to be split before pricing.
 //
 // Grok's headless/CLI summaries may use snake_case fields whose input_tokens is

@@ -794,7 +794,7 @@ test("resolveCopilotAppDbPaths stays native when Windows WSL mode is wsl-only", 
   const paths = resolveCopilotAppDbPaths({
     HOME: "/tmp/shell-home",
     USERPROFILE: "/tmp/native-user",
-    TOKENTRACKER_WSL_MODE: "wsl-only",
+    TOKEN_PULSE_WSL_MODE: "wsl-only",
   });
   assert.deepEqual(paths, [
     path.join("/tmp/native-user", ".copilot", "data.db"),

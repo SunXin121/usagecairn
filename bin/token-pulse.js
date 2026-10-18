@@ -5,7 +5,7 @@ const { run } = require('../src/cli');
 const { stripDebugFlag } = require('../src/lib/debug-flags');
 
 const { argv, debug } = stripDebugFlag(process.argv.slice(2));
-if (debug) process.env.TOKENTRACKER_DEBUG = '1';
+if (debug) process.env.TOKEN_PULSE_DEBUG = '1';
 
 run(argv).catch((err) => {
   console.error(err?.stack || String(err));

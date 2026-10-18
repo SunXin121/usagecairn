@@ -47,7 +47,7 @@ async function multiInstallParse({ paths, parserFn, providerName, cursors, getPa
       eventsAggregated += result.eventsAggregated || 0;
       bucketsQueued += result.bucketsQueued || 0;
     } catch (parseErr) {
-      if (parseErr?.code !== "TOKENTRACKER_CURSOR_STORE_RETRY") {
+      if (parseErr?.code !== "TOKEN_PULSE_CURSOR_STORE_RETRY") {
         cursors[providerName] = ns;
       }
       throw parseErr;
@@ -96,8 +96,8 @@ function mergeBothFileSources({ resolveFiles, env }) {
     return files;
   }
 
-  const nativeEnv = { ...env, TOKENTRACKER_WSL_MODE: "native-only" };
-  const wslEnv = { ...env, TOKENTRACKER_WSL_MODE: "wsl-only" };
+  const nativeEnv = { ...env, TOKEN_PULSE_WSL_MODE: "native-only" };
+  const wslEnv = { ...env, TOKEN_PULSE_WSL_MODE: "wsl-only" };
 
   const nativeFiles = resolveFiles(nativeEnv);
   const wslFiles = resolveFiles(wslEnv);

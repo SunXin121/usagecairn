@@ -106,7 +106,7 @@ test("parseRolloutIncremental ignores repeated token_count records with unchange
   // Codex can repeat the same token_count record in a rollout. The cumulative
   // total_token_usage value is authoritative for a file; if it did not move,
   // the repeated last_token_usage must not be counted again.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -164,7 +164,7 @@ test("parseRolloutIncremental ignores repeated token_count records with unchange
 
 test("parseRolloutIncremental preserves Unicode line separators inside physical JSONL records", async () => {
   for (const separator of ["\u2028", "\u2029"]) {
-    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-unicode-line-"));
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-unicode-line-"));
     try {
       const rolloutPath = path.join(tmp, "rollout-test.jsonl");
       const queuePath = path.join(tmp, "queue.jsonl");
@@ -212,7 +212,7 @@ test("parseRolloutIncremental preserves Unicode line separators inside physical 
 });
 
 test("parseRolloutIncremental skips an invalid UTF-8 record and keeps surrounding usage", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-invalid-utf8-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-invalid-utf8-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -280,7 +280,7 @@ test("parseRolloutIncremental retries incomplete trailing JSONL records", async 
 
   for (const testCase of cases) {
     await t.test(testCase.name, async () => {
-      const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-partial-jsonl-"));
+      const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-partial-jsonl-"));
       try {
         const rolloutPath = path.join(tmp, "rollout-test.jsonl");
         const queuePath = path.join(tmp, "queue.jsonl");
@@ -341,7 +341,7 @@ test("parseRolloutIncremental retries incomplete trailing JSONL records", async 
 });
 
 test("parseRolloutIncremental recovers from a legacy cursor inside a UTF-8 character", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-legacy-utf8-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-legacy-utf8-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -395,7 +395,7 @@ test("parseRolloutIncremental recovers from a legacy cursor inside a UTF-8 chara
 });
 
 test("parseRolloutIncremental separates interleaved cumulative usage lineages", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-interleaved.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -455,7 +455,7 @@ test("parseRolloutIncremental does not re-count a session file rewritten with a 
   // event-level dedup that re-adds the whole file to the persistent hourly
   // buckets on every switch (issue #187). Event dedup keyed on
   // sessionUUID:eventTimestamp must make the re-scan idempotent.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(
       tmp,
@@ -498,7 +498,7 @@ test("listRolloutFilesDeep finds flat archived_sessions files the strict scanner
   // Codex-Manager archives sessions FLAT into ~/.codex/archived_sessions/ (no
   // YYYY/MM/DD nesting), which listRolloutFiles requires and therefore skips.
   // listRolloutFilesDeep must find rollout-*.jsonl at any depth.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-archived-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-archived-"));
   try {
     const flat = path.join(tmp, "rollout-2026-02-04T11-55-57-019c26ca-e6bb-7e00-b33a-2ac67a11ddb9.jsonl");
     const nestedDir = path.join(tmp, "2025", "12", "24");
@@ -530,7 +530,7 @@ test("compressed Codex archives are discovered and counted once (issue #817)", a
   // sessions/** and flat in archived_sessions/. The scanner must discover
   // them, decode via the shared DSH zstd machinery, and dedup by
   // sessionUUID:timestamp so a re-sync is a no-op.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-817-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-817-"));
   try {
     const uuid = "019c26ca-e6bb-7e00-b33a-2ac67a11ddb9";
     const usage = { input_tokens: 100, cached_input_tokens: 0, output_tokens: 50, reasoning_output_tokens: 0, total_tokens: 150 };
@@ -580,7 +580,7 @@ test("compressed Codex archives are discovered and counted once (issue #817)", a
 test("malformed compressed Codex archive does not abort the sync (issue #817)", async () => {
   // A truncated .zst must return null from the snapshot reader so the sync
   // loop keeps the prior cursor and continues with later rollout files.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-817-bad-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-817-bad-"));
   try {
     const uuid = "019c26ca-e6bb-7e00-b33a-2ac67a11ddb9";
     const archiveDir = path.join(tmp, "archived_sessions");
@@ -630,7 +630,7 @@ test("malformed compressed Codex archive does not abort the sync (issue #817)", 
 });
 
 test("malformed compressed Codex archive throws under strict rebuild policy (issue #817)", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-817-strict-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-817-strict-"));
   try {
     const uuid = "019c26ca-e6bb-7e00-b33a-2ac67a11ddb9";
     const archiveDir = path.join(tmp, "archived_sessions");
@@ -656,7 +656,7 @@ test("compressed Codex project-only rescan keeps compressed-size cursor (issue #
   // After a full sync, an expired project context must re-read cwd via the
   // snapshot decoder — never as raw compressed bytes — and leave the cursor
   // pinned to the compressed size so the next unchanged check still hits.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-817-proj-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-817-proj-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -722,7 +722,7 @@ test("compressed Codex project-only rescan keeps compressed-size cursor (issue #
 test("compressed Codex archive growth does not inflate totals (issue #817)", async () => {
   // Same inode, larger compressed bytes: must full-rescan without retaining
   // lastTotal, or previously counted events are applied again.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-817-grow-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-817-grow-"));
   try {
     const uuid = "019c26ca-e6bb-7e00-b33a-2ac67a11ddb9";
     const archiveDir = path.join(tmp, "archived_sessions");
@@ -787,7 +787,7 @@ test("compressed Codex archive growth does not inflate totals (issue #817)", asy
 });
 
 test("unchanged compressed archive with publicRepoResolver does not inflate (issue #817)", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-817-resolver-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-817-resolver-"));
   try {
     const uuid = "019c26ca-e6bb-7e00-b33a-2ac67a11ddb9";
     const archiveDir = path.join(tmp, "archived_sessions");
@@ -835,7 +835,7 @@ test("parseRolloutIncremental does not double-count a session moved sessions/ ->
   // UUID + event timestamps) reappears at a different path. Now that sync scans
   // archived_sessions/ too, re-reading the archived copy must be a no-op — the
   // event dedup keys on sessionUUID:eventTimestamp, both stable across the move.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const uuid = "019b4e04-2bd1-7661-b050-066f82a96566";
     const livePath = path.join(tmp, "sessions", "2025", "12", "24");
@@ -877,7 +877,7 @@ test("parseRolloutIncremental does not double-count a session moved sessions/ ->
 });
 
 test("parseRolloutIncremental deduplicates Acode live and archived session copies independently", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-acode-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-acode-rollout-"));
   try {
     const uuid = "019b4e04-2bd1-7661-b050-066f82a96567";
     const liveDir = path.join(tmp, ".acode", "sessions", "2026", "08", "31");
@@ -935,7 +935,7 @@ test("parseRolloutIncremental deduplicates Acode live and archived session copie
 });
 
 test("parseRolloutIncremental leaves Acode dedup state absent when no Acode files participate", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-acode-cursor-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-acode-cursor-"));
   try {
     const cursors = { version: 1, files: {}, updatedAt: null };
     await parseRolloutIncremental({
@@ -951,7 +951,7 @@ test("parseRolloutIncremental leaves Acode dedup state absent when no Acode file
 });
 
 test("parseRolloutIncremental prefers cumulative total_token_usage delta over larger last_token_usage", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1002,7 +1002,7 @@ test("parseRolloutIncremental prefers cumulative total_token_usage delta over la
 });
 
 test("parseRolloutIncremental emits project usage buckets with canonicalized project_ref", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1071,7 +1071,7 @@ test("parseRolloutIncremental emits project usage buckets with canonicalized pro
 });
 
 test("parseRolloutIncremental uses turn_context cwd to resolve project context", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1127,7 +1127,7 @@ test("parseRolloutIncremental uses turn_context cwd to resolve project context",
 });
 
 test("parseRolloutIncremental skips unchanged files when project state is disabled", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const sessionsDir = path.join(tmp, "sessions", "2026", "01", "26");
     await fs.mkdir(sessionsDir, { recursive: true });
@@ -1172,7 +1172,7 @@ test("parseRolloutIncremental skips unchanged files when project state is disabl
 });
 
 test("parseRolloutIncremental skips unchanged project-enabled files after project EOF is recorded", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1241,7 +1241,7 @@ test("parseRolloutIncremental skips unchanged project-enabled files after projec
 });
 
 test("parseRolloutIncremental skips unchanged codex sessions using turn_context cwd project freshness", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1297,7 +1297,7 @@ test("parseRolloutIncremental skips unchanged codex sessions using turn_context 
 });
 
 test("parseRolloutIncremental recovers legacy Codex EOF cursor project freshness from turn_context cwd", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1367,7 +1367,7 @@ test("parseRolloutIncremental recovers legacy Codex EOF cursor project freshness
 });
 
 test("parseRolloutIncremental retries a partial legacy project-context-only tail", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-project-partial-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-project-partial-"));
   let rolloutHandle;
   try {
     const repoRoot = path.join(tmp, "repo");
@@ -1453,7 +1453,7 @@ test("parseRolloutIncremental retries a partial legacy project-context-only tail
 });
 
 test("parseRolloutIncremental gives legacy project cursors one EOF pass before skipping", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1517,7 +1517,7 @@ test("parseRolloutIncremental gives legacy project cursors one EOF pass before s
 });
 
 test("parseRolloutIncremental does not skip unchanged project files with a custom resolver", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1577,7 +1577,7 @@ test("parseRolloutIncremental does not skip unchanged project files with a custo
 });
 
 test("parseRolloutIncremental throttles unchanged files after missing project context", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(repoRoot, { recursive: true });
@@ -1644,7 +1644,7 @@ test("parseRolloutIncremental throttles unchanged files after missing project co
 });
 
 test("parseRolloutIncremental memoizes project config freshness during idle scans", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   const realStat = fs.stat;
   try {
     const repoRoot = path.join(tmp, "repo");
@@ -1708,7 +1708,7 @@ test("parseRolloutIncremental memoizes project config freshness during idle scan
 });
 
 test("parseRolloutIncremental keeps project EOF fast path scoped to codex source", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -1761,7 +1761,7 @@ test("parseRolloutIncremental keeps project EOF fast path scoped to codex source
 });
 
 test("parseRolloutIncremental bounds concurrent metadata reads while preserving parse order", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-stat-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-stat-"));
   const realStat = fs.stat;
   try {
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1803,7 +1803,7 @@ test("parseRolloutIncremental bounds concurrent metadata reads while preserving 
 });
 
 test("filterColdCodexRolloutFiles skips historical EOF Codex files without statting them", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   const realStat = fs.stat;
   try {
     const oldPath = path.join(
@@ -1866,7 +1866,7 @@ test("filterColdCodexRolloutFiles skips historical EOF Codex files without statt
 });
 
 test("filterColdCodexRolloutFiles re-reads a recent cold rollout that grew past its cursor (#592)", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   const realStat = fs.stat;
   try {
     // nowMs is 2026-07-05 local; a session created 07-02 is outside the two-day
@@ -1926,7 +1926,7 @@ test("filterColdCodexRolloutFiles re-reads a recent cold rollout that grew past 
 });
 
 test("filterColdCodexRolloutFiles keeps project-stale historical files parseable", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     const configPath = path.join(repoRoot, ".git", "config");
@@ -1974,7 +1974,7 @@ test("filterColdCodexRolloutFiles keeps project-stale historical files parseable
 });
 
 test("parseRolloutIncremental re-reads same-inode truncation when project state is disabled", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2059,7 +2059,7 @@ test("parseRolloutIncremental re-reads same-inode truncation when project state 
 });
 
 test("parseRolloutIncremental uses session_meta cwd to resolve project context", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -2115,7 +2115,7 @@ test("parseRolloutIncremental uses session_meta cwd to resolve project context",
 });
 
 test("parseRolloutIncremental marks blocked when remote is missing but repo_root_hash matches", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -2177,7 +2177,7 @@ test("parseRolloutIncremental marks blocked when remote is missing but repo_root
 });
 
 test("parseRolloutIncremental strips credentials from project_ref", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -2233,7 +2233,7 @@ test("parseRolloutIncremental strips credentials from project_ref", async () => 
 });
 
 test("parseRolloutIncremental ignores local path project_ref", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -2288,7 +2288,7 @@ test("parseRolloutIncremental ignores local path project_ref", async () => {
 });
 
 test("parseRolloutIncremental skips project usage when repo is blocked", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const repoRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
@@ -2340,7 +2340,7 @@ test("parseRolloutIncremental skips project usage when repo is blocked", async (
 });
 
 test("parseRolloutIncremental splits usage into half-hour buckets", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2397,7 +2397,7 @@ test("parseRolloutIncremental splits usage into half-hour buckets", async () => 
 });
 
 test("parseRolloutIncremental skips historical replay tokens in forked Codex rollouts", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(
       tmp,
@@ -2470,7 +2470,7 @@ test("parseRolloutIncremental skips historical replay tokens in forked Codex rol
 });
 
 test("parseRolloutIncremental skips same-day forked replay burst (issue #169 follow-up)", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-2026-06-09T20-46-23-fork.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2519,7 +2519,7 @@ test("parseRolloutIncremental skips same-day forked replay burst (issue #169 fol
 });
 
 test("parseRolloutIncremental skips same-day forked replay burst for Acode", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-acode-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-acode-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-2026-06-09T20-46-23-fork.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2587,7 +2587,7 @@ test("parseRolloutIncremental skips same-day forked replay burst for Acode", asy
 });
 
 test("parseRolloutIncremental latches off after the replay burst, keeping fast live turns", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-2026-06-09T20-46-23-fork.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2629,7 +2629,7 @@ test("parseRolloutIncremental latches off after the replay burst, keeping fast l
 });
 
 test("parseRolloutIncremental counts fast live turns appended after the first sync of a forked rollout", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-2026-06-09T20-46-23-fork.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2677,7 +2677,7 @@ test("parseRolloutIncremental counts fast live turns appended after the first sy
 });
 
 test("parseRolloutIncremental fails open when a forked rollout's timestamps step backwards", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-2026-06-09T20-46-23-fork.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2716,7 +2716,7 @@ test("parseRolloutIncremental fails open when a forked rollout's timestamps step
 });
 
 test("parseRolloutIncremental never drops genuine turns in a replay-free fork", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-2026-06-09T20-46-23-fork.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2749,7 +2749,7 @@ test("parseRolloutIncremental never drops genuine turns in a replay-free fork", 
 });
 
 test("parseRolloutIncremental migrates v1 hourly buckets without resetting totals", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2802,7 +2802,7 @@ test("parseRolloutIncremental migrates v1 hourly buckets without resetting total
 });
 
 test("parseRolloutIncremental handles total_token_usage reset by counting last_token_usage", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2861,7 +2861,7 @@ test("parseRolloutIncremental handles total_token_usage reset by counting last_t
 });
 
 test("parseRolloutIncremental handles total_token_usage reset when last_token_usage is missing", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2912,7 +2912,7 @@ test("parseRolloutIncremental handles total_token_usage reset when last_token_us
 });
 
 test("parseGeminiIncremental aggregates gemini tokens and model", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2956,7 +2956,7 @@ test("parseGeminiIncremental aggregates gemini tokens and model", async () => {
 });
 
 test("parseGeminiIncremental recomputes total when Gemini reported total excludes cache", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-total-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-total-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -2992,7 +2992,7 @@ test("parseGeminiIncremental recomputes total when Gemini reported total exclude
 });
 
 test("parseGeminiIncremental keeps cumulative totals across messages without tokens", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-missing-tokens-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-missing-tokens-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3041,7 +3041,7 @@ test("parseGeminiIncremental keeps cumulative totals across messages without tok
 });
 
 test("parseGeminiIncremental skips duplicate cumulative snapshots in one file", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-duplicate-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-duplicate-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3085,7 +3085,7 @@ test("parseGeminiIncremental skips duplicate cumulative snapshots in one file", 
 });
 
 test("parseGeminiIncremental advances baseline for messages with tokens but no timestamp", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-missing-timestamp-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-missing-timestamp-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3133,7 +3133,7 @@ test("parseGeminiIncremental advances baseline for messages with tokens but no t
 });
 
 test("parseGeminiIncremental is idempotent with unchanged totals", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3167,7 +3167,7 @@ test("parseGeminiIncremental is idempotent with unchanged totals", async () => {
 });
 
 test("parseGeminiIncremental skips unchanged files when project state is disabled", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3219,7 +3219,7 @@ test("parseGeminiIncremental skips unchanged files when project state is disable
 });
 
 test("parseGeminiIncremental reprocesses old cursors without unchanged metadata", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3254,7 +3254,7 @@ test("parseGeminiIncremental reprocesses old cursors without unchanged metadata"
 });
 
 test("parseGeminiIncremental still processes unchanged files when project state is enabled", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-"));
   try {
     const projectRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(projectRoot, ".git"), { recursive: true });
@@ -3335,7 +3335,7 @@ test("parseGeminiIncremental still processes unchanged files when project state 
 });
 
 test("parseGeminiIncremental rebuilds project buckets after purge clears file project cursor", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-purge-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-purge-"));
   try {
     const projectRoot = path.join(tmp, "repo");
     await fs.mkdir(path.join(projectRoot, ".git"), { recursive: true });
@@ -3416,7 +3416,7 @@ test("parseGeminiIncremental rebuilds project buckets after purge clears file pr
 });
 
 test("parseGeminiIncremental defaults missing model to unknown", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-gemini-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-gemini-"));
   try {
     const sessionPath = path.join(tmp, "session.json");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -3447,7 +3447,7 @@ test("parseGeminiIncremental defaults missing model to unknown", async () => {
 });
 
 test("parseCursorApiIncremental treats Cursor CSV as authoritative and replaces prior cursor buckets", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-cursor-reconcile-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-cursor-reconcile-"));
   try {
     const queuePath = path.join(tmp, "queue.jsonl");
     const cursors = { version: 1, files: {}, updatedAt: null };
@@ -3507,7 +3507,7 @@ test("parseCursorApiIncremental preserves history older than a windowed/truncate
   // (e.g. current billing period only), buckets older than the response
   // must NOT be zeroed — zeroed buckets get re-emitted and uploaded,
   // overwriting the cloud copy with zeros.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-cursor-window-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-cursor-window-"));
   try {
     const queuePath = path.join(tmp, "queue.jsonl");
     const cursors = { version: 1, files: {}, updatedAt: null };
@@ -3572,7 +3572,7 @@ test("parseCursorApiIncremental preserves history older than a windowed/truncate
 });
 
 test("parseOpencodeIncremental aggregates message tokens and model", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -3620,7 +3620,7 @@ test("parseOpencodeIncremental aggregates message tokens and model", async () =>
 });
 
 test("readOpencodeDbMessages falls back to node:sqlite when sqlite3 CLI is unavailable", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-db-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-db-"));
   try {
     const dbPath = path.join(tmp, "opencode.db");
     await fs.writeFile(dbPath, "", "utf8");
@@ -3757,7 +3757,7 @@ function fakeNativeZcodeSqliteOptions(dbPath, usageRows, { completeSchema = true
 }
 
 test("readZcodeDbMessages prefers complete native model_usage rows and keeps token columns", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-native-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-native-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     await fs.writeFile(dbPath, "", "utf8");
@@ -3796,7 +3796,7 @@ test("readZcodeDbMessages prefers complete native model_usage rows and keeps tok
 });
 
 test("readZcodeDbMessages falls back when model_usage schema is incomplete", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-native-fallback-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-native-fallback-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     await fs.writeFile(dbPath, "", "utf8");
@@ -3811,7 +3811,7 @@ test("readZcodeDbMessages falls back when model_usage schema is incomplete", asy
 });
 
 test("readZcodeDbMessages queries a real native schema and ignores unfinished requests", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-native-sql-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-native-sql-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     runSqliteWrite(dbPath, `
@@ -3887,7 +3887,7 @@ test("readZcodeDbMessages queries a real native schema and ignores unfinished re
 });
 
 test("readZcodeDbMessages preserves legacy history before native model_usage begins", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-native-history-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-native-history-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     const legacyBeforeNative = {
@@ -3949,7 +3949,7 @@ test("readZcodeDbMessages preserves legacy history before native model_usage beg
 });
 
 test("readZcodeDbMessages snapshots native model_usage DBs on UNC paths", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-native-unc-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-native-unc-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     runSqliteWrite(dbPath, `
@@ -3990,7 +3990,7 @@ test("readZcodeDbMessages snapshots native model_usage DBs on UNC paths", async 
 });
 
 test("readZcodeDbMessages preserves normalized legacy history before native model_usage begins", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-native-history-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-native-history-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     const legacyBeforeNative = {
@@ -4056,7 +4056,7 @@ test("readZcodeDbMessages preserves normalized legacy history before native mode
 });
 
 test("readZcodeDbMessages keeps Z.ai/BigModel + third-party rows, drops bundled sub-agent turns", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-db-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-db-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     await fs.writeFile(dbPath, "", "utf8");
@@ -4099,7 +4099,7 @@ test("readZcodeDbMessages keeps Z.ai/BigModel + third-party rows, drops bundled 
 });
 
 test("parseOpencodeDbIncremental aggregates ZCode GLM rows into source=zcode buckets (idempotent)", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-zcode-parse-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-zcode-parse-"));
   try {
     const dbPath = path.join(tmp, "db.sqlite");
     await fs.writeFile(dbPath, "", "utf8");
@@ -4156,7 +4156,7 @@ test("parseOpencodeDbIncremental aggregates ZCode GLM rows into source=zcode buc
 });
 
 test("parseOpencodeIncremental defaults missing model to unknown", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4183,7 +4183,7 @@ test("parseOpencodeIncremental defaults missing model to unknown", async () => {
 });
 
 test("parseOpencodeIncremental falls back to model field when modelID missing", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4211,7 +4211,7 @@ test("parseOpencodeIncremental falls back to model field when modelID missing", 
 });
 
 test("parseOpencodeIncremental does not double count after message rewrite", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4250,7 +4250,7 @@ test("parseOpencodeIncremental does not double count after message rewrite", asy
 });
 
 test("parseOpencodeIncremental falls back to legacy cursors when opencode state missing", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4290,7 +4290,7 @@ test("parseOpencodeIncremental falls back to legacy cursors when opencode state 
 });
 
 test("parseOpencodeIncremental counts usage once timestamp appears", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4332,7 +4332,7 @@ test("parseOpencodeIncremental counts usage once timestamp appears", async () =>
 });
 
 test("parseOpencodeIncremental preserves totals after empty rewrite", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4379,7 +4379,7 @@ test("parseOpencodeIncremental preserves totals after empty rewrite", async () =
   }
 });
 test("parseOpencodeIncremental updates totals after message rewrite with new tokens", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4425,7 +4425,7 @@ test("parseOpencodeIncremental updates totals after message rewrite with new tok
 });
 
 test("parseOpencodeIncremental preserves legacy file totals when opencode index missing", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode-"));
   try {
     const messageDir = path.join(tmp, "message", "ses_test");
     await fs.mkdir(messageDir, { recursive: true });
@@ -4482,7 +4482,7 @@ test("parseRolloutIncremental subtracts cached_input_tokens from Codex input_tok
   // treating Codex's inclusive-of-cached `input_tokens` as pure non-cached
   // input. Anchors the numbers against a realistic cache-heavy session
   // (95% cache hit) like the ones flagged in production.
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-codex-cached-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-codex-cached-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-codex.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4527,7 +4527,7 @@ test("parseRolloutIncremental subtracts cached_input_tokens from Codex input_tok
 });
 
 test("parseRolloutIncremental drops Codex total-only sentinel usage", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-codex-total-sentinel-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-codex-total-sentinel-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-codex.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4569,7 +4569,7 @@ test("parseRolloutIncremental drops Codex total-only sentinel usage", async () =
 });
 
 test("parseRolloutIncremental handles Every Code token_count envelope", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4608,7 +4608,7 @@ test("parseRolloutIncremental handles Every Code token_count envelope", async ()
 });
 
 test("parseRolloutIncremental keeps buckets separate per source", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const codexPath = path.join(tmp, "rollout-codex.jsonl");
     const everyPath = path.join(tmp, "rollout-every.jsonl");
@@ -4654,7 +4654,7 @@ test("parseRolloutIncremental keeps buckets separate per source", async () => {
 });
 
 test("parseRolloutIncremental keeps buckets separate per model within the same hour", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4710,7 +4710,7 @@ test("parseRolloutIncremental keeps buckets separate per model within the same h
 });
 
 test("parseRolloutIncremental persists selected-model state and bills an observed reroute to the effective model", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-codex-reroute-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-codex-reroute-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-reroute.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4760,7 +4760,7 @@ test("parseRolloutIncremental persists selected-model state and bills an observe
 });
 
 test("parseRolloutIncremental backfills unknown into dominant known model", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4842,7 +4842,7 @@ test("parseRolloutIncremental backfills unknown into dominant known model", asyn
 });
 
 test("parseRolloutIncremental chooses dominant model deterministically on tie", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -4916,7 +4916,7 @@ test("parseRolloutIncremental chooses dominant model deterministically on tie", 
 });
 
 test("parseRolloutIncremental aligns every-code unknown to nearest codex model", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const codexPath = path.join(tmp, "rollout-codex.jsonl");
     const everyPath = path.join(tmp, "rollout-every.jsonl");
@@ -4968,7 +4968,7 @@ test("parseRolloutIncremental aligns every-code unknown to nearest codex model",
 });
 
 test("parseRolloutIncremental breaks ties by earlier codex bucket", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const codexPath = path.join(tmp, "rollout-codex.jsonl");
     const everyPath = path.join(tmp, "rollout-every.jsonl");
@@ -5028,7 +5028,7 @@ test("parseRolloutIncremental breaks ties by earlier codex bucket", async () => 
 });
 
 test("parseRolloutIncremental retracts prior every-code alignment when target changes", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const codexPath = path.join(tmp, "rollout-codex.jsonl");
     const everyPath = path.join(tmp, "rollout-every.jsonl");
@@ -5158,7 +5158,7 @@ test("parseRolloutIncremental retracts prior every-code alignment when target ch
 });
 
 test("parseRolloutIncremental retracts unknown when known model appears later", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5227,7 +5227,7 @@ test("parseRolloutIncremental retracts unknown when known model appears later", 
 });
 
 test("parseRolloutIncremental recomputes every-code alignment on codex-only updates", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-rollout-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-rollout-"));
   try {
     const codexPath = path.join(tmp, "rollout-codex.jsonl");
     const everyPath = path.join(tmp, "rollout-every.jsonl");
@@ -5327,7 +5327,7 @@ test("parseRolloutIncremental recomputes every-code alignment on codex-only upda
 });
 
 test("parseClaudeIncremental skips OmO-mirrored sdk-ts external Claude SDK usage", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-omo-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-omo-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5368,7 +5368,7 @@ test("parseClaudeIncremental skips OmO-mirrored sdk-ts external Claude SDK usage
 });
 
 test("parseClaudeIncremental aggregates usage into half-hour buckets", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5423,7 +5423,7 @@ test("parseClaudeIncremental aggregates usage into half-hour buckets", async () 
 });
 
 test("parseClaudeIncremental skips unchanged files once project context is settled", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5467,13 +5467,13 @@ test("parseClaudeIncremental skips unchanged files once project context is settl
 });
 
 test("parseClaudeIncremental resolves project from content-embedded cwd, not the ~/.claude/projects storage path", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     // Simulate the real ~/.claude/projects/<dash-encoded-cwd>/ storage layout:
     // the file's own directory is NOT inside the real git checkout, so a
     // directory-walk from the file path can never find a project. Only the
     // "cwd" field logged inside the file's content points at the real repo.
-    const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-repo-"));
+    const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-repo-"));
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
     await fs.writeFile(
       path.join(repoRoot, ".git", "config"),
@@ -5525,9 +5525,9 @@ test("parseClaudeIncremental resolves project from content-embedded cwd, not the
 });
 
 test("parseClaudeIncremental retries cwd resolution when a growing file's cwd line lands after an earlier sync", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
-    const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-repo-"));
+    const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-repo-"));
     await fs.mkdir(path.join(repoRoot, ".git"), { recursive: true });
     await fs.writeFile(
       path.join(repoRoot, ".git", "config"),
@@ -5583,9 +5583,9 @@ test("parseClaudeIncremental retries cwd resolution when a growing file's cwd li
 });
 
 test("parseClaudeIncremental skips re-walking git for an idle file whose cwd has no git checkout", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
-    const nonRepoDir = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-norepo-"));
+    const nonRepoDir = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-norepo-"));
     const storageDir = path.join(tmp, "-some-unrelated-claude-storage-dir");
     await fs.mkdir(storageDir, { recursive: true });
     const claudePath = path.join(storageDir, "session.jsonl");
@@ -5624,7 +5624,7 @@ test("parseClaudeIncremental skips re-walking git for an idle file whose cwd has
 });
 
 test("parseClaudeIncremental counts cache creation as input and cache read separately", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5663,7 +5663,7 @@ test("parseClaudeIncremental counts cache creation as input and cache read separ
 });
 
 test("parseClaudeIncremental computes total from all components ignoring JSONL total", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5698,7 +5698,7 @@ test("parseClaudeIncremental computes total from all components ignoring JSONL t
 // unique per the Anthropic message protocol and must be sufficient as a
 // dedup key.
 test("parseClaudeIncremental dedups by msgId alone when requestId is missing", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-deepseek.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5767,7 +5767,7 @@ test("parseClaudeIncremental dedups by msgId alone when requestId is missing", a
 // `<msgId>:<requestId>` dedup key behavior must remain unchanged so
 // already-persisted cursors.claudeHashes entries continue to match.
 test("parseClaudeIncremental keeps msgId:requestId dedup when requestId is present", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -5823,7 +5823,7 @@ test("parseClaudeIncremental keeps msgId:requestId dedup when requestId is prese
 // covers the case where Claude Code restarts mid-stream and emits the
 // final chunk into a different session file under a third-party endpoint.
 test("parseClaudeIncremental dedups same msgId across files in mixed reqId scenarios", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const fileA = path.join(tmp, "session-a.jsonl");
     const fileB = path.join(tmp, "session-b.jsonl");
@@ -5877,7 +5877,7 @@ test("parseClaudeIncremental dedups same msgId across files in mixed reqId scena
 });
 
 test("parseClaudeIncremental defaults missing model to unknown", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-claude-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-claude-"));
   try {
     const claudePath = path.join(tmp, "agent-claude.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -6039,7 +6039,7 @@ function buildOpencodeMessage({ modelID, model, modelId, created, completed, tok
 }
 
 test("parseKiroIncremental tracks JSONL fallback with a separate cursor", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-kiro-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-kiro-"));
   try {
     const jsonlPath = path.join(tmp, "tokens_generated.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -6087,7 +6087,7 @@ test("parseKiroIncremental tracks JSONL fallback with a separate cursor", async 
 });
 
 test("parseKiroIncremental ignores JSONL fallback after file truncation until new baseline is established", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-kiro-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-kiro-"));
   try {
     const jsonlPath = path.join(tmp, "tokens_generated.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -6362,17 +6362,17 @@ test("parseHermesIncremental re-reads cursor timestamp sessions so same-second i
   }
 });
 
-test("resolveHermesPath honors TOKENTRACKER_HERMES_HOME override", () => {
-  const override = "/tmp/tokentracker-hermes-override";
-  assert.equal(resolveHermesPath({ TOKENTRACKER_HERMES_HOME: override }), override);
+test("resolveHermesPath honors TOKEN_PULSE_HERMES_HOME override", () => {
+  const override = "/tmp/token-pulse-hermes-override";
+  assert.equal(resolveHermesPath({ TOKEN_PULSE_HERMES_HOME: override }), override);
   assert.equal(
-    resolveHermesDbPath({ TOKENTRACKER_HERMES_HOME: override }),
+    resolveHermesDbPath({ TOKEN_PULSE_HERMES_HOME: override }),
     path.join(override, "state.db"),
   );
   // Falls back to ~/.hermes when override is empty or absent.
   // Suppress the WSL probe so this assertion is deterministic on Windows (#87).
   const noWsl = { runWsl: () => { throw new Error("no WSL"); } };
-  const fallback = resolveHermesPath({ TOKENTRACKER_HERMES_HOME: "  " }, noWsl);
+  const fallback = resolveHermesPath({ TOKEN_PULSE_HERMES_HOME: "  " }, noWsl);
   assert.equal(fallback, path.join(os.homedir(), ".hermes"));
   assert.equal(resolveHermesPath({}, noWsl), path.join(os.homedir(), ".hermes"));
 });
@@ -6401,9 +6401,9 @@ test("resolveHermesPath prefers %LOCALAPPDATA%\\hermes on Windows when present",
   await fs.mkdir(winNative, { recursive: true });
   assert.equal(resolveHermesPath({ LOCALAPPDATA: tmp }, noWsl), winNative);
 
-  // Explicit TOKENTRACKER_HERMES_HOME still wins over LOCALAPPDATA auto-detect.
+  // Explicit TOKEN_PULSE_HERMES_HOME still wins over LOCALAPPDATA auto-detect.
   assert.equal(
-    resolveHermesPath({ LOCALAPPDATA: tmp, TOKENTRACKER_HERMES_HOME: "/custom/hermes" }),
+    resolveHermesPath({ LOCALAPPDATA: tmp, TOKEN_PULSE_HERMES_HOME: "/custom/hermes" }),
     "/custom/hermes",
   );
 });
@@ -6419,7 +6419,7 @@ test("Zed wsl-only does not return or stat native Windows DB", (t) => {
   const dbPath = resolveZedDbPath({
     HOME: "C:\\Users\\me",
     LOCALAPPDATA: "C:\\Users\\me\\AppData\\Local",
-    TOKENTRACKER_WSL_MODE: "wsl-only",
+    TOKEN_PULSE_WSL_MODE: "wsl-only",
   });
 
   assert.equal(dbPath, null);
@@ -6438,7 +6438,7 @@ test("Goose wsl-only does not return or stat native Windows candidates", (t) => 
     HOME: "C:\\Users\\me",
     APPDATA: "C:\\Users\\me\\AppData\\Roaming",
     XDG_DATA_HOME: "C:\\Users\\me\\AppData\\Roaming",
-    TOKENTRACKER_WSL_MODE: "wsl-only",
+    TOKEN_PULSE_WSL_MODE: "wsl-only",
   });
 
   assert.equal(dbPath, null);
@@ -6455,7 +6455,7 @@ test("Kimi Code native-first prefers native home when WSL also exists", (t) => {
 
   const home = resolveKimiCodeHome({
     HOME: "C:\\Users\\me",
-    TOKENTRACKER_WSL_MODE: "native-first",
+    TOKEN_PULSE_WSL_MODE: "native-first",
   });
 
   assert.equal(home, path.join(os.homedir(), ".kimi-code"));
@@ -6472,7 +6472,7 @@ test("Kimi Code wsl-first prefers WSL home when both sides exist", (t) => {
 
   const home = resolveKimiCodeHome({
     HOME: "C:\\Users\\me",
-    TOKENTRACKER_WSL_MODE: "wsl-first",
+    TOKEN_PULSE_WSL_MODE: "wsl-first",
   });
 
   assert.equal(home, "\\\\wsl$\\Ubuntu\\home\\dev\\.kimi-code");
@@ -6489,7 +6489,7 @@ test("Kimi (legacy) native-first prefers native home when WSL also exists", (t) 
 
   const home = resolveKimiHome({
     HOME: "C:\\Users\\me",
-    TOKENTRACKER_WSL_MODE: "native-first",
+    TOKEN_PULSE_WSL_MODE: "native-first",
   });
 
   assert.equal(home, path.join(os.homedir(), ".kimi"));
@@ -6506,7 +6506,7 @@ test("Kimi (legacy) wsl-first prefers WSL home when both sides exist", (t) => {
 
   const home = resolveKimiHome({
     HOME: "C:\\Users\\me",
-    TOKENTRACKER_WSL_MODE: "wsl-first",
+    TOKEN_PULSE_WSL_MODE: "wsl-first",
   });
 
   assert.equal(home, "\\\\wsl$\\Ubuntu\\home\\dev\\.kimi");
@@ -6519,7 +6519,7 @@ test("Kilocode roots pass resolver env to WSL discovery", (t) => {
   const roots = resolveKilocodeRoots({
     HOME: "C:\\Users\\me",
     APPDATA: "C:\\Users\\me\\AppData\\Roaming",
-    TOKENTRACKER_WSL_MODE: "native-only",
+    TOKEN_PULSE_WSL_MODE: "native-only",
   });
 
   assert.ok(roots.some((root) => root.includes("AppData")));
@@ -6637,9 +6637,9 @@ test("parseHermesIncremental snapshots the DB locally for UNC paths", async () =
   }
 });
 
-test("parseHermesIncremental reads a database under TOKENTRACKER_HERMES_HOME override", async () => {
+test("parseHermesIncremental reads a database under TOKEN_PULSE_HERMES_HOME override", async () => {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-hermes-env-override-"));
-  const prev = process.env.TOKENTRACKER_HERMES_HOME;
+  const prev = process.env.TOKEN_PULSE_HERMES_HOME;
   try {
     const queuePath = path.join(tmp, "queue.jsonl");
     const cursors = { version: 1 };
@@ -6649,7 +6649,7 @@ test("parseHermesIncremental reads a database under TOKENTRACKER_HERMES_HOME ove
       { id: "envoverride_session", model: "gpt-5.4-mini", started_at: epoch, ended_at: epoch + 120, input_tokens: 800, output_tokens: 200, message_count: 2 },
     ]);
 
-    process.env.TOKENTRACKER_HERMES_HOME = tmp;
+    process.env.TOKEN_PULSE_HERMES_HOME = tmp;
     const hermesPath = resolveHermesPath();
     assert.equal(hermesPath, tmp);
 
@@ -6660,8 +6660,8 @@ test("parseHermesIncremental reads a database under TOKENTRACKER_HERMES_HOME ove
     const queued = await readJsonLines(queuePath);
     assert.ok(queued.some((b) => b.source === "hermes" && b.input_tokens === 800 && b.output_tokens === 200));
   } finally {
-    if (prev === undefined) delete process.env.TOKENTRACKER_HERMES_HOME;
-    else process.env.TOKENTRACKER_HERMES_HOME = prev;
+    if (prev === undefined) delete process.env.TOKEN_PULSE_HERMES_HOME;
+    else process.env.TOKEN_PULSE_HERMES_HOME = prev;
     await fs.rm(tmp, { recursive: true, force: true });
   }
 });
@@ -11136,7 +11136,7 @@ test("parsePrimeAgentIncremental retries a trailing JSON fragment after the writ
   }
 });
 
-test("TOKENTRACKER_PRIME_AGENT_DIR expands HOME and overrides default discovery", async () => {
+test("TOKEN_PULSE_PRIME_AGENT_DIR expands HOME and overrides default discovery", async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), "tt-prime-home-"));
   const relocated = await fs.mkdtemp(path.join(os.tmpdir(), "tt-prime-relocated-"));
   try {
@@ -11144,11 +11144,11 @@ test("TOKENTRACKER_PRIME_AGENT_DIR expands HOME and overrides default discovery"
     await fs.mkdir(sessionsDir, { recursive: true });
     await fs.writeFile(path.join(sessionsDir, "session.jsonl"), buildOmpSessionHeader() + "\n", "utf8");
     assert.equal(
-      resolvePrimeAgentDir({ HOME: home, TOKENTRACKER_PRIME_AGENT_DIR: "~/custom-prime-agent" }),
+      resolvePrimeAgentDir({ HOME: home, TOKEN_PULSE_PRIME_AGENT_DIR: "~/custom-prime-agent" }),
       path.join(home, "custom-prime-agent"),
     );
     assert.equal(
-      resolvePrimeAgentSessionFiles({ HOME: home, TOKENTRACKER_PRIME_AGENT_DIR: relocated }).length,
+      resolvePrimeAgentSessionFiles({ HOME: home, TOKEN_PULSE_PRIME_AGENT_DIR: relocated }).length,
       1,
     );
   } finally {
@@ -11216,7 +11216,7 @@ test("PI_CODING_AGENT_DIR is owned by pi when ~/.pi exists; omp falls back to de
   }
 });
 
-test("TOKENTRACKER_PI_AGENT_DIR overrides PI_CODING_AGENT_DIR and the default for pi", async () => {
+test("TOKEN_PULSE_PI_AGENT_DIR overrides PI_CODING_AGENT_DIR and the default for pi", async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), "tt-pi-tt-home-"));
   const ttPiTmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-pi-explicit-"));
   const sharedTmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-pi-shared-"));
@@ -11228,7 +11228,7 @@ test("TOKENTRACKER_PI_AGENT_DIR overrides PI_CODING_AGENT_DIR and the default fo
     const result = resolvePiSessionFiles({
       HOME: home,
       PI_CODING_AGENT_DIR: sharedTmp,
-      TOKENTRACKER_PI_AGENT_DIR: ttPiTmp,
+      TOKEN_PULSE_PI_AGENT_DIR: ttPiTmp,
     });
     assert.equal(result.length, 1);
     assert.ok(result[0].startsWith(ttPiTmp));
@@ -11239,11 +11239,11 @@ test("TOKENTRACKER_PI_AGENT_DIR overrides PI_CODING_AGENT_DIR and the default fo
   }
 });
 
-test("TOKENTRACKER_PI_AGENT_DIR expands a bare '~' to HOME", () => {
+test("TOKEN_PULSE_PI_AGENT_DIR expands a bare '~' to HOME", () => {
   const home = "/tmp/tt-tilde-home";
-  const dir = resolvePiAgentDir({ HOME: home, TOKENTRACKER_PI_AGENT_DIR: "~" });
+  const dir = resolvePiAgentDir({ HOME: home, TOKEN_PULSE_PI_AGENT_DIR: "~" });
   assert.equal(dir, home);
-  const sub = resolvePiAgentDir({ HOME: home, TOKENTRACKER_PI_AGENT_DIR: "~/relocated" });
+  const sub = resolvePiAgentDir({ HOME: home, TOKEN_PULSE_PI_AGENT_DIR: "~/relocated" });
   assert.equal(sub, path.join(home, "relocated"));
 });
 
@@ -11270,8 +11270,8 @@ test("piAgentDirCollidesWithOmp detects shared explicit overrides", () => {
   assert.equal(
     piAgentDirCollidesWithOmp({
       HOME: home,
-      TOKENTRACKER_OMP_AGENT_DIR: shared,
-      TOKENTRACKER_PI_AGENT_DIR: shared,
+      TOKEN_PULSE_OMP_AGENT_DIR: shared,
+      TOKEN_PULSE_PI_AGENT_DIR: shared,
     }),
     true,
   );
@@ -11281,7 +11281,7 @@ test("piAgentDirCollidesWithOmp detects shared explicit overrides", () => {
   );
 });
 
-test("TOKENTRACKER_OMP_AGENT_DIR forces omp ownership even when ~/.pi exists", async () => {
+test("TOKEN_PULSE_OMP_AGENT_DIR forces omp ownership even when ~/.pi exists", async () => {
   const home = await fs.mkdtemp(path.join(os.tmpdir(), "tt-force-home-"));
   const ompTmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-omp-explicit-"));
   const sharedTmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-shared-explicit-"));
@@ -11297,12 +11297,12 @@ test("TOKENTRACKER_OMP_AGENT_DIR forces omp ownership even when ~/.pi exists", a
     const ompResult = resolveOmpSessionFiles({
       HOME: home,
       PI_CODING_AGENT_DIR: sharedTmp,
-      TOKENTRACKER_OMP_AGENT_DIR: ompTmp,
+      TOKEN_PULSE_OMP_AGENT_DIR: ompTmp,
     });
     const piResult = resolvePiSessionFiles({
       HOME: home,
       PI_CODING_AGENT_DIR: sharedTmp,
-      TOKENTRACKER_OMP_AGENT_DIR: ompTmp,
+      TOKEN_PULSE_OMP_AGENT_DIR: ompTmp,
     });
     assert.equal(ompResult.length, 1);
     assert.ok(ompResult[0].startsWith(ompTmp));

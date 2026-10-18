@@ -169,7 +169,7 @@ const {
   isCursorStoreRetry,
   openCursorStore,
 } = require("../lib/cursor-store");
-const { resolveTrackerPaths } = require("../lib/tracker-paths");
+const { resolveTrackerPaths } = require("../lib/pulse-paths");
 const {
   appendUniqueDirs,
   extraScanRootPaths,
@@ -456,7 +456,7 @@ const SYNC_SKIP_MARKER = "sync.skip.json";
 
 // A skipped sync used to exit 0 with no output whatsoever, so lock debris left
 // by a killed run stalled every parse for a day with no visible signal and
-// nothing for `tokentracker status` to report (issue #431). Leave a queryable
+// nothing for `token-pulse status` to report (issue #431). Leave a queryable
 // marker that separates ordinary contention (`lock_busy`) from a lease whose
 // owner is gone (`lock_debris`, the state that needs attention).
 async function recordSyncSkip(trackerDir, lockPath) {
@@ -695,7 +695,7 @@ async function cmdSync(argv, context = {}) {
     }
     if (sourceAllowed("acode")) {
       const acodeNativeValue =
-        process.env.TOKENTRACKER_ACODE_HOME || path.join(home, ".acode");
+        process.env.TOKEN_PULSE_ACODE_HOME || path.join(home, ".acode");
       const acodePaths = resolveInstallPaths({
         nativeValue: acodeNativeValue,
         wslDir: ".acode",
@@ -904,7 +904,7 @@ async function cmdSync(argv, context = {}) {
         }
         parseResult = await runCodexParse(rolloutFiles);
         codexParseSucceeded = true;
-      } else if (err?.code === "TOKENTRACKER_CURSOR_STORE_CORRUPT") {
+      } else if (err?.code === "TOKEN_PULSE_CURSOR_STORE_CORRUPT") {
         throw err;
       } else {
         warnProviderParseFailure("Codex", err, opts);
@@ -1964,7 +1964,7 @@ async function cmdSync(argv, context = {}) {
     // A simple explicit rolling 30-day window captured once per sync (no
     // cursor checkpoints / full-history import / page retries / background
     // requests). Runs only when the user has opted in via
-    // TOKENTRACKER_TRAE_CN_USAGE=1 (the read transmits the locally stored
+    // TOKEN_PULSE_TRAE_CN_USAGE=1 (the read transmits the locally stored
     // sign-in JWT to TRAE's official endpoint, so it is never default-on),
     // the sync is non-lightweight, the source is allowed, and the CN storage
     // file exists — which excludes both ordinary background and `--auto
@@ -2091,7 +2091,7 @@ async function cmdSync(argv, context = {}) {
     // ── Hermes Agent (SQLite-based) ──
     let hermesResult = { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
     if (sourceAllowed("hermes")) {
-      const override = process.env.TOKENTRACKER_HERMES_HOME;
+      const override = process.env.TOKEN_PULSE_HERMES_HOME;
       const overridePath = typeof override === "string" && override.trim().length > 0 ? override.trim() : null;
       if (overridePath) {
         if (fssync.existsSync(overridePath)) {
@@ -2177,7 +2177,7 @@ async function cmdSync(argv, context = {}) {
       const nativeCliPresent = fssync.existsSync(kiroCliDb) || kiroCliSessionFiles.length > 0;
 
       // Explicit overrides pin a single install — never mix them with WSL
-      // auto-discovery (mirrors the Hermes TOKENTRACKER_HERMES_HOME branch).
+      // auto-discovery (mirrors the Hermes TOKEN_PULSE_HERMES_HOME branch).
       const kiroCliOverride = Boolean(process.env.KIRO_CLI_DB_PATH || process.env.KIRO_HOME);
       let wslKiroCliEnv = null;
       let wslKiroCliMarker = null;
@@ -2444,7 +2444,7 @@ async function cmdSync(argv, context = {}) {
     // namespace and source label, so the two never shadow each other.
     let omoResult = { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
     // Skip OmO when its agent dir resolves to the same path as omp's, so an
-    // explicit TOKENTRACKER_OMO_AGENT_DIR pointing at ~/.omp/agent cannot
+    // explicit TOKEN_PULSE_OMO_AGENT_DIR pointing at ~/.omp/agent cannot
     // double-count the same transcripts under two source labels.
     const omoCollidesWithOmp = omoAgentDirCollidesWithOmp(process.env);
     const omoFiles = !sourceAllowed("omo") || omoCollidesWithOmp
@@ -2480,8 +2480,8 @@ async function cmdSync(argv, context = {}) {
 
     // ── pi (@mariozechner/pi-coding-agent) — passive ~/.pi/agent/sessions/**/*.jsonl reader ──
     // Skip pi parse if its agent dir resolves to the same path as omp's. This
-    // prevents double-counting when explicit overrides (TOKENTRACKER_OMP_AGENT_DIR /
-    // TOKENTRACKER_PI_AGENT_DIR) bypass the install-signal disambiguator.
+    // prevents double-counting when explicit overrides (TOKEN_PULSE_OMP_AGENT_DIR /
+    // TOKEN_PULSE_PI_AGENT_DIR) bypass the install-signal disambiguator.
     let piResult = { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
     const piFiles = !sourceAllowed("pi") || piAgentDirCollidesWithOmp(process.env)
       ? []
@@ -2811,11 +2811,11 @@ async function cmdSync(argv, context = {}) {
         .map(([dbPath]) => copilotPathKey(dbPath)),
     );
     const explicitCopilotStorePath =
-      typeof process.env.TOKENTRACKER_COPILOT_SESSION_STORE_DB === "string" &&
-      process.env.TOKENTRACKER_COPILOT_SESSION_STORE_DB.trim()
+      typeof process.env.TOKEN_PULSE_COPILOT_SESSION_STORE_DB === "string" &&
+      process.env.TOKEN_PULSE_COPILOT_SESSION_STORE_DB.trim()
         ? copilotPathKey(
             normalizeCopilotDbPath(
-              process.env.TOKENTRACKER_COPILOT_SESSION_STORE_DB,
+              process.env.TOKEN_PULSE_COPILOT_SESSION_STORE_DB,
               process.env,
             ),
           )
@@ -3207,7 +3207,7 @@ async function cmdSync(argv, context = {}) {
           `- Parsed files: ${totalParsed}`,
           `- New 30-min buckets queued: ${totalBuckets}`,
           pendingBytes > 0
-            ? `- Local backlog: ${formatBytes(pendingBytes)} awaiting upload (run: tracker upload)`
+            ? `- Local backlog: ${formatBytes(pendingBytes)} awaiting upload (run: token-pulse upload)`
             : "- Local backlog: none",
           codexRecordOnlyWarning ? `- Warning: ${codexRecordOnlyWarning}` : null,
           "",
@@ -3350,8 +3350,8 @@ function normalizeString(value) {
 function resolveOpenclawSignal({ env } = {}) {
   if (!env) return null;
 
-  const agentId = normalizeString(env.TOKENTRACKER_OPENCLAW_AGENT_ID);
-  const sessionId = normalizeString(env.TOKENTRACKER_OPENCLAW_PREV_SESSION_ID);
+  const agentId = normalizeString(env.TOKEN_PULSE_OPENCLAW_AGENT_ID);
+  const sessionId = normalizeString(env.TOKEN_PULSE_OPENCLAW_PREV_SESSION_ID);
   if (!agentId || !sessionId) return null;
 
   // Resolve the OpenClaw home identically to the passive scanner so the
@@ -3362,17 +3362,17 @@ function resolveOpenclawSignal({ env } = {}) {
   const sessionFile = path.join(openclawHome, "agents", agentId, "sessions", `${sessionId}.jsonl`);
 
   const prevTotals = {
-    totalTokens: normalizeNonNegativeInt(env.TOKENTRACKER_OPENCLAW_PREV_TOTAL_TOKENS),
-    inputTokens: normalizeNonNegativeInt(env.TOKENTRACKER_OPENCLAW_PREV_INPUT_TOKENS),
-    outputTokens: normalizeNonNegativeInt(env.TOKENTRACKER_OPENCLAW_PREV_OUTPUT_TOKENS),
-    model: normalizeString(env.TOKENTRACKER_OPENCLAW_PREV_MODEL),
-    updatedAt: normalizeIsoOrEpoch(env.TOKENTRACKER_OPENCLAW_PREV_UPDATED_AT),
+    totalTokens: normalizeNonNegativeInt(env.TOKEN_PULSE_OPENCLAW_PREV_TOTAL_TOKENS),
+    inputTokens: normalizeNonNegativeInt(env.TOKEN_PULSE_OPENCLAW_PREV_INPUT_TOKENS),
+    outputTokens: normalizeNonNegativeInt(env.TOKEN_PULSE_OPENCLAW_PREV_OUTPUT_TOKENS),
+    model: normalizeString(env.TOKEN_PULSE_OPENCLAW_PREV_MODEL),
+    updatedAt: normalizeIsoOrEpoch(env.TOKEN_PULSE_OPENCLAW_PREV_UPDATED_AT),
   };
 
   return {
     agentId,
     sessionId,
-    sessionKey: normalizeString(env.TOKENTRACKER_OPENCLAW_SESSION_KEY),
+    sessionKey: normalizeString(env.TOKEN_PULSE_OPENCLAW_SESSION_KEY),
     openclawHome,
     sessionFile,
     prevTotals,

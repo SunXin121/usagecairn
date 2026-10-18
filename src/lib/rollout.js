@@ -57,7 +57,7 @@ const DEFAULT_MODEL = "unknown";
 const BUCKET_SEPARATOR = "|";
 const CLAUDE_MEM_OBSERVER_PATH_SEGMENT = "--claude-mem-observer-sessions";
 const CLAUDE_MEM_OBSERVER_PROJECT_REF =
-  "https://local.tokentracker/claude-mem/observer-sessions";
+  "https://local.token-pulse/claude-mem/observer-sessions";
 const PROJECT_ABSENT_CONTEXT_RESCAN_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_CODEX_COLD_SKIP_RECENT_DAYS = 2;
 // A rollout keeps its creation date in its name, but Codex appends to a session
@@ -513,7 +513,7 @@ async function parseRolloutIncremental({
     // steady-state short-circuit below: the append-only tracker only knows keys
     // written during the current run, so when the other path has nothing new to
     // read it contributes none, and a path whose cursor fell behind (a distro
-    // that was briefly unreachable, a TOKENTRACKER_WSL_MODE round-trip) replays
+    // that was briefly unreachable, a TOKEN_PULSE_WSL_MODE round-trip) replays
     // its gap into the persisted buckets. Only the persisted set can catch that.
     const sessionId = codexSessionIdFromPath(filePath);
     if (!sessionId) return true;
@@ -1679,7 +1679,7 @@ async function parseOpencodeIncremental({
 // transcript history.
 function resolveOpenclawHome(env = process.env) {
   const override =
-    (typeof env.TOKENTRACKER_OPENCLAW_HOME === "string" && env.TOKENTRACKER_OPENCLAW_HOME.trim()) ||
+    (typeof env.TOKEN_PULSE_OPENCLAW_HOME === "string" && env.TOKEN_PULSE_OPENCLAW_HOME.trim()) ||
     (typeof env.OPENCLAW_HOME === "string" && env.OPENCLAW_HOME.trim()) ||
     (typeof env.OPENCLAW_STATE_DIR === "string" && env.OPENCLAW_STATE_DIR.trim()) ||
     "";
@@ -1693,7 +1693,7 @@ function resolveOpenclawHomes(env = process.env, deps = {}) {
   const roots = [resolveOpenclawHome(env)];
   const platform = deps.platform || process.platform;
   const overridden =
-    env.TOKENTRACKER_OPENCLAW_HOME || env.OPENCLAW_HOME || env.OPENCLAW_STATE_DIR;
+    env.TOKEN_PULSE_OPENCLAW_HOME || env.OPENCLAW_HOME || env.OPENCLAW_STATE_DIR;
   if (platform === "win32" && !overridden) {
     const discoverWslHome = deps.discoverWslHome || wsl.discoverWslHome;
     const wslRoot = wsl.shouldProbeWsl(env) ? discoverWslHome(".openclaw", { ...deps, env }) : null;
@@ -6080,7 +6080,7 @@ function readZcodeNativeUsageMessages(dbPath, sqliteOptions = {}, { propagateRea
 // accumulated months of history in the OpenCode message tables. The native
 // table is authoritative from its first completed row onward, but it is not a
 // historical backfill. Keep legacy rows before that boundary so merely adding
-// the new table cannot make older usage disappear from TokenTracker.
+// the new table cannot make older usage disappear from TokenPulse.
 function readZcodeDbMessages(dbPath, sqliteOptions = {}, { propagateReadFailure = false } = {}) {
   if (!dbPath || !fssync.existsSync(dbPath)) return [];
   const nativeMessages = readZcodeNativeUsageMessages(dbPath, sqliteOptions, { propagateReadFailure });
@@ -7946,7 +7946,7 @@ async function parseKiroIncremental({ basePath, dbPath, jsonlPath, cursors, queu
 // ─────────────────────────────────────────────────────────────────────────────
 
 function resolveHermesPath(env = process.env, deps = {}) {
-  const override = env.TOKENTRACKER_HERMES_HOME;
+  const override = env.TOKEN_PULSE_HERMES_HOME;
   if (typeof override === "string" && override.trim().length > 0) {
     return override.trim();
   }
@@ -9321,7 +9321,7 @@ async function parseKiroCliIncremental({ sessionFiles, cursors, queuePath, onPro
   const hourlyState = normalizeHourlyState(cursors?.hourly);
   const touchedBuckets = new Set();
   const debugEnabled = ["1", "true"].includes(
-    String(resolvedEnv.TOKENTRACKER_DEBUG || "").toLowerCase(),
+    String(resolvedEnv.TOKEN_PULSE_DEBUG || "").toLowerCase(),
   );
 
   // ── TASK-007 + D-1: cross-source retraction. When a conversation has
@@ -10460,7 +10460,7 @@ function resolveCodebuddyProjectFiles(env = process.env) {
     walkLogs(root.dir);
   }
 
-  const fallbackMode = String(env.TOKENTRACKER_CODEBUDDY_LOG_FALLBACK || "").trim();
+  const fallbackMode = String(env.TOKEN_PULSE_CODEBUDDY_LOG_FALLBACK || "").trim();
   // Auto mode keeps both sources available. The parser performs bounded,
   // count-aware cross-source fingerprint matching, so mixed histories retain
   // legacy-only log sessions while mirrored rounds are counted once. Env=0 is
@@ -11979,7 +11979,7 @@ async function parseWorkbuddyIncremental({
 
 function resolveOmpHome(env = process.env) {
   const home = env.HOME || require("node:os").homedir();
-  // Honor TokenTracker override first, then oh-my-pi upstream env vars.
+  // Honor TokenPulse override first, then oh-my-pi upstream env vars.
   if (env.OMP_HOME) return env.OMP_HOME;
   if (env.PI_CONFIG_DIR) return path.join(home, env.PI_CONFIG_DIR);
   if (process.platform === "win32") {
@@ -11998,7 +11998,7 @@ function resolveOmpHome(env = process.env) {
 // historical default in this codebase, preserved for back-compat).
 //
 // Users with both tools installed can disambiguate explicitly with
-// TOKENTRACKER_PI_AGENT_DIR / TOKENTRACKER_OMP_AGENT_DIR, which take
+// TOKEN_PULSE_PI_AGENT_DIR / TOKEN_PULSE_OMP_AGENT_DIR, which take
 // precedence in their respective resolvers.
 function decidePiCodingAgentDirOwner(env = process.env) {
   const home = env.HOME || require("node:os").homedir();
@@ -12020,8 +12020,8 @@ function expandHomePath(dir, env = process.env) {
 }
 
 function resolveOmpAgentDir(env = process.env) {
-  if (env.TOKENTRACKER_OMP_AGENT_DIR) {
-    return expandHomePath(env.TOKENTRACKER_OMP_AGENT_DIR, env);
+  if (env.TOKEN_PULSE_OMP_AGENT_DIR) {
+    return expandHomePath(env.TOKEN_PULSE_OMP_AGENT_DIR, env);
   }
   if (env.PI_CODING_AGENT_DIR && decidePiCodingAgentDirOwner(env) === "omp") {
     return expandHomePath(env.PI_CODING_AGENT_DIR, env);
@@ -12200,15 +12200,15 @@ async function resolveOmpFileCwd(filePath) {
 // OmO is a router — the upstream model name is recorded per message and there
 // is no global default (fallback: "omo-unknown").
 //
-// Path overrides are TokenTracker-only (TOKENTRACKER_OMO_AGENT_DIR /
-// TOKENTRACKER_OMO_HOME / OMO_HOME). PI_CONFIG_DIR and PI_CODING_AGENT_DIR are
+// Path overrides are TokenPulse-only (TOKEN_PULSE_OMO_AGENT_DIR /
+// TOKEN_PULSE_OMO_HOME / OMO_HOME). PI_CONFIG_DIR and PI_CODING_AGENT_DIR are
 // deliberately NOT honored here: those belong to pi/omp, and routing them to a
 // third provider would reintroduce the ambiguity decidePiCodingAgentDirOwner
 // exists to resolve.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function resolveOmoHome(env = process.env) {
-  if (env.TOKENTRACKER_OMO_HOME) return expandHomePath(env.TOKENTRACKER_OMO_HOME, env);
+  if (env.TOKEN_PULSE_OMO_HOME) return expandHomePath(env.TOKEN_PULSE_OMO_HOME, env);
   if (env.OMO_HOME) return expandHomePath(env.OMO_HOME, env);
   const home = env.HOME || require("node:os").homedir();
   if (process.platform === "win32") {
@@ -12222,8 +12222,8 @@ function resolveOmoHome(env = process.env) {
 }
 
 function resolveOmoAgentDir(env = process.env) {
-  if (env.TOKENTRACKER_OMO_AGENT_DIR) {
-    return expandHomePath(env.TOKENTRACKER_OMO_AGENT_DIR, env);
+  if (env.TOKEN_PULSE_OMO_AGENT_DIR) {
+    return expandHomePath(env.TOKEN_PULSE_OMO_AGENT_DIR, env);
   }
   const omoHome = resolveOmoHome(env);
   return omoHome ? path.join(omoHome, "agent") : null;
@@ -12273,9 +12273,9 @@ async function resolveOmoFileCwd(filePath) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function resolveKilocodeRoots(env = process.env) {
-  if (typeof env.TOKENTRACKER_KILOCODE_ROOTS === "string" && env.TOKENTRACKER_KILOCODE_ROOTS.trim()) {
+  if (typeof env.TOKEN_PULSE_KILOCODE_ROOTS === "string" && env.TOKEN_PULSE_KILOCODE_ROOTS.trim()) {
     // Use the host's PATH delimiter so a Windows drive colon stays intact.
-    return env.TOKENTRACKER_KILOCODE_ROOTS.split(path.delimiter)
+    return env.TOKEN_PULSE_KILOCODE_ROOTS.split(path.delimiter)
       .map((r) => r.trim())
       .filter(Boolean);
   }
@@ -12654,14 +12654,14 @@ function resolveClineSessionsDir(env = process.env, deps = {}) {
   const nonEmpty = (value) => (typeof value === "string" && value.trim() ? value.trim() : null);
 
   const sessionsOverride =
-    nonEmpty(env.TOKENTRACKER_CLINE_SESSIONS_DIR) || nonEmpty(env.CLINE_SESSION_DATA_DIR);
+    nonEmpty(env.TOKEN_PULSE_CLINE_SESSIONS_DIR) || nonEmpty(env.CLINE_SESSION_DATA_DIR);
   if (sessionsOverride) return expand(sessionsOverride, env);
 
-  const dataDir = nonEmpty(env.TOKENTRACKER_CLINE_DATA_DIR) || nonEmpty(env.CLINE_DATA_DIR);
+  const dataDir = nonEmpty(env.TOKEN_PULSE_CLINE_DATA_DIR) || nonEmpty(env.CLINE_DATA_DIR);
   if (dataDir) return path.join(expand(dataDir, env), "sessions");
 
   const home = env.HOME || require("node:os").homedir();
-  const clineDir = nonEmpty(env.TOKENTRACKER_CLINE_HOME) || nonEmpty(env.CLINE_DIR);
+  const clineDir = nonEmpty(env.TOKEN_PULSE_CLINE_HOME) || nonEmpty(env.CLINE_DIR);
   return path.join(clineDir ? expand(clineDir, env) : path.join(home, ".cline"), "data", "sessions");
 }
 
@@ -12669,9 +12669,9 @@ function resolveClineSessionsDir(env = process.env, deps = {}) {
 // WSL probe entirely rather than unioning in a distro copy they did not ask for.
 function clineSessionsDirIsOverridden(env = process.env) {
   return [
-    env.TOKENTRACKER_CLINE_SESSIONS_DIR,
-    env.TOKENTRACKER_CLINE_DATA_DIR,
-    env.TOKENTRACKER_CLINE_HOME,
+    env.TOKEN_PULSE_CLINE_SESSIONS_DIR,
+    env.TOKEN_PULSE_CLINE_DATA_DIR,
+    env.TOKEN_PULSE_CLINE_HOME,
     env.CLINE_SESSION_DATA_DIR,
     env.CLINE_DATA_DIR,
     env.CLINE_DIR,
@@ -13104,7 +13104,7 @@ async function parseClineIncremental({
 // the real Zed model name is preserved for display.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Providers whose usage is ALSO captured by a dedicated TokenTracker parser, so
+// Providers whose usage is ALSO captured by a dedicated TokenPulse parser, so
 // counting them via the Zed thread store would double-count. Zed's native model
 // providers (zed.dev, copilot_chat, openai*, anthropic, google, ollama,
 // lmstudio, …) do NOT overlap: e.g. Zed's copilot_chat talks to the Copilot API
@@ -13116,8 +13116,8 @@ const ZED_DOUBLE_COUNTED_PROVIDERS = new Set();
 const MAX_ZED_THREAD_JSON_BYTES = 32 * 1024 * 1024;
 
 function resolveZedDbPath(env = process.env) {
-  if (typeof env.TOKENTRACKER_ZED_DB === "string" && env.TOKENTRACKER_ZED_DB.trim()) {
-    return env.TOKENTRACKER_ZED_DB.trim();
+  if (typeof env.TOKEN_PULSE_ZED_DB === "string" && env.TOKEN_PULSE_ZED_DB.trim()) {
+    return env.TOKEN_PULSE_ZED_DB.trim();
   }
   const home = env.HOME || require("node:os").homedir();
   if (process.platform === "darwin") {
@@ -13485,8 +13485,8 @@ const LMSTUDIO_MESSAGE_LIMIT = 10_000;
 const LMSTUDIO_USAGE_MARKER = Buffer.from('"usage"');
 
 function resolveLmstudioHome(env = process.env) {
-  const override = typeof env.TOKENTRACKER_LMSTUDIO_HOME === "string"
-    ? env.TOKENTRACKER_LMSTUDIO_HOME.trim()
+  const override = typeof env.TOKEN_PULSE_LMSTUDIO_HOME === "string"
+    ? env.TOKEN_PULSE_LMSTUDIO_HOME.trim()
     : "";
   if (override) return path.resolve(override);
   const nativeHome = typeof env.LM_STUDIO_HOME === "string"
@@ -13996,7 +13996,7 @@ async function parseLmstudioIncremental({
         }
       }
     } catch (error) {
-      if (process.env.TOKENTRACKER_DEBUG) {
+      if (process.env.TOKEN_PULSE_DEBUG) {
         process.stderr.write(`[lmstudio] rebuild deferred: ${error?.message || error}\n`);
       }
       return { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
@@ -14041,7 +14041,7 @@ async function parseLmstudioIncremental({
           recordsProcessed += 1;
           stateChanged = true;
         } catch (error) {
-          if (process.env.TOKENTRACKER_DEBUG) {
+          if (process.env.TOKEN_PULSE_DEBUG) {
             process.stderr.write(`[lmstudio] skipped ${filePath}: ${error?.message || error}\n`);
           }
         }
@@ -14108,8 +14108,8 @@ const UNSLOTH_METERED_PROVIDER_TYPES = new Set([
 ]);
 
 function resolveUnslothDbPath(env = process.env) {
-  const override = typeof env.TOKENTRACKER_UNSLOTH_DB === "string"
-    ? env.TOKENTRACKER_UNSLOTH_DB.trim()
+  const override = typeof env.TOKEN_PULSE_UNSLOTH_DB === "string"
+    ? env.TOKEN_PULSE_UNSLOTH_DB.trim()
     : "";
   if (override) return path.resolve(override);
   const studioHome = typeof env.UNSLOTH_STUDIO_HOME === "string"
@@ -14423,7 +14423,7 @@ async function parseUnslothIncremental({
 //   macOS:   ~/Library/Application Support/anythingllm-desktop/storage/anythingllm.db
 //   Linux:   $XDG_CONFIG_HOME/anythingllm-desktop/storage/anythingllm.db
 //   Windows: %APPDATA%\anythingllm-desktop\storage\anythingllm.db
-//   Override: $TOKENTRACKER_ANYTHINGLLM_DB
+//   Override: $TOKEN_PULSE_ANYTHINGLLM_DB
 //
 // AnythingLLM >= 1.7.1 stores per-message prompt/completion/total counts in
 // workspace_chats.response.metrics. The SQL projection below extracts only
@@ -14434,8 +14434,8 @@ async function parseUnslothIncremental({
 const ANYTHINGLLM_PENDING_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 function resolveAnythingllmDbPath(env = process.env, platform = process.platform) {
-  const override = typeof env.TOKENTRACKER_ANYTHINGLLM_DB === "string"
-    ? env.TOKENTRACKER_ANYTHINGLLM_DB.trim()
+  const override = typeof env.TOKEN_PULSE_ANYTHINGLLM_DB === "string"
+    ? env.TOKEN_PULSE_ANYTHINGLLM_DB.trim()
     : "";
   if (override) return override;
 
@@ -14707,7 +14707,7 @@ async function parseAnythingllmIncremental({
 //   macOS/Linux: $XDG_DATA_HOME/devin/cli/sessions.db (~/.local/share)
 //   Windows:     no evidenced native location; the CLI's XDG data dir inside a
 //                WSL distro is probed via the \\wsl$ UNC bridge
-//   Override:    $TOKENTRACKER_DEVIN_DB
+//   Override:    $TOKEN_PULSE_DEVIN_DB
 //
 // Devin rewrites history aggressively: replay, compaction and forks copy
 // message_nodes rows, so several nodes share one chat_message
@@ -14733,8 +14733,8 @@ const DEVIN_SOURCE = "devin";
 
 function resolveDevinDbPath(env = process.env, deps = {}) {
   const override =
-    typeof env.TOKENTRACKER_DEVIN_DB === "string" && env.TOKENTRACKER_DEVIN_DB.trim();
-  if (override) return path.resolve(env.TOKENTRACKER_DEVIN_DB.trim());
+    typeof env.TOKEN_PULSE_DEVIN_DB === "string" && env.TOKEN_PULSE_DEVIN_DB.trim();
+  if (override) return path.resolve(env.TOKEN_PULSE_DEVIN_DB.trim());
   const home = env.HOME || env.USERPROFILE || os.homedir();
   const xdgDataHome =
     typeof env.XDG_DATA_HOME === "string" && env.XDG_DATA_HOME.trim()
@@ -15115,8 +15115,8 @@ async function parseDevinIncremental({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function resolveGooseDbPath(env = process.env) {
-  if (typeof env.TOKENTRACKER_GOOSE_DB === "string" && env.TOKENTRACKER_GOOSE_DB.trim()) {
-    return env.TOKENTRACKER_GOOSE_DB.trim();
+  if (typeof env.TOKEN_PULSE_GOOSE_DB === "string" && env.TOKEN_PULSE_GOOSE_DB.trim()) {
+    return env.TOKEN_PULSE_GOOSE_DB.trim();
   }
   const root = typeof env.GOOSE_PATH_ROOT === "string" ? env.GOOSE_PATH_ROOT.trim() : "";
   if (root) return path.join(root, "data", "sessions", "sessions.db");
@@ -16767,8 +16767,8 @@ function resolvePiHome(env = process.env) {
 }
 
 function resolvePiAgentDir(env = process.env) {
-  if (env.TOKENTRACKER_PI_AGENT_DIR) {
-    return expandHomePath(env.TOKENTRACKER_PI_AGENT_DIR, env);
+  if (env.TOKEN_PULSE_PI_AGENT_DIR) {
+    return expandHomePath(env.TOKEN_PULSE_PI_AGENT_DIR, env);
   }
   if (env.PI_CODING_AGENT_DIR && decidePiCodingAgentDirOwner(env) === "pi") {
     return expandHomePath(env.PI_CODING_AGENT_DIR, env);
@@ -16778,8 +16778,8 @@ function resolvePiAgentDir(env = process.env) {
 }
 
 // Defense in depth for invariant 2 (no double-count). Two explicit overrides
-// pointing at the same path (e.g. TOKENTRACKER_OMP_AGENT_DIR === TOKENTRACKER_PI_AGENT_DIR,
-// or TOKENTRACKER_OMP_AGENT_DIR === PI_CODING_AGENT_DIR with ~/.pi present) bypass
+// pointing at the same path (e.g. TOKEN_PULSE_OMP_AGENT_DIR === TOKEN_PULSE_PI_AGENT_DIR,
+// or TOKEN_PULSE_OMP_AGENT_DIR === PI_CODING_AGENT_DIR with ~/.pi present) bypass
 // the install-signal disambiguator and would otherwise have both providers scan
 // the same sessions directory under different `source` tags.
 function piAgentDirCollidesWithOmp(env = process.env) {
@@ -16861,8 +16861,8 @@ function resolvePiDefaultModel() {
 // Keep its path and cursor namespace independent from pi so installations of
 // both tools can never suppress or double-count each other.
 function resolvePrimeAgentHome(env = process.env) {
-  if (env.TOKENTRACKER_PRIME_AGENT_HOME) {
-    return expandHomePath(env.TOKENTRACKER_PRIME_AGENT_HOME, env);
+  if (env.TOKEN_PULSE_PRIME_AGENT_HOME) {
+    return expandHomePath(env.TOKEN_PULSE_PRIME_AGENT_HOME, env);
   }
   const home = env.HOME || require("node:os").homedir();
   if (process.platform === "win32") {
@@ -16876,8 +16876,8 @@ function resolvePrimeAgentHome(env = process.env) {
 }
 
 function resolvePrimeAgentDir(env = process.env) {
-  if (env.TOKENTRACKER_PRIME_AGENT_DIR) {
-    return expandHomePath(env.TOKENTRACKER_PRIME_AGENT_DIR, env);
+  if (env.TOKEN_PULSE_PRIME_AGENT_DIR) {
+    return expandHomePath(env.TOKEN_PULSE_PRIME_AGENT_DIR, env);
   }
   const primeHome = resolvePrimeAgentHome(env);
   return primeHome ? path.join(primeHome, "agent") : null;
@@ -17353,7 +17353,7 @@ const MINIMAX_CODE_SESSION_FILE = "messages.jsonl";
 const MINIMAX_CODE_MAX_SESSION_DEPTH = 5;
 
 function resolveMinimaxCodeHome(env = process.env) {
-  if (env.TOKENTRACKER_MINIMAX_HOME) return expandHomePath(env.TOKENTRACKER_MINIMAX_HOME, env);
+  if (env.TOKEN_PULSE_MINIMAX_HOME) return expandHomePath(env.TOKEN_PULSE_MINIMAX_HOME, env);
   const home = env.HOME || require("node:os").homedir();
   if (process.platform === "win32") {
     return pickWin32ProviderPath({
@@ -17447,7 +17447,7 @@ async function parseMinimaxCodeIncremental(options = {}) {
 // config.json to enumerate every rootPath rather than just globbing the
 // default directory.
 //
-// Token semantics map directly onto TokenTracker conventions — `inputTokens`
+// Token semantics map directly onto TokenPulse conventions — `inputTokens`
 // is already pure non-cached input (no Codex-style trap, see
 // feedback_rollout_input_semantics.md). Re-parses are idempotent: the header
 // is rewritten as the session grows, and we dedup by sessionId combined with
@@ -17535,8 +17535,8 @@ function resolveCraftDefaultModel() {
 // Reasonix persists content-free cumulative usage beside each session JSONL.
 // Reading only these telemetry sidecars keeps prompts and tool output private.
 function reasonixHomeCandidates(env = process.env) {
-  if (env.TOKENTRACKER_REASONIX_HOME) {
-    return [expandHomePath(env.TOKENTRACKER_REASONIX_HOME, env)];
+  if (env.TOKEN_PULSE_REASONIX_HOME) {
+    return [expandHomePath(env.TOKEN_PULSE_REASONIX_HOME, env)];
   }
   if (env.REASONIX_STATE_HOME) {
     return [expandHomePath(env.REASONIX_STATE_HOME, env)];
@@ -17730,7 +17730,7 @@ async function parseReasonixIncremental({ telemetryFiles, cursors, queuePath, on
 // response or path text is read or stored; only counts, timestamps and the
 // model id.
 function resolveMuseHome(env = process.env) {
-  if (env.TOKENTRACKER_MUSE_HOME) return expandHomePath(env.TOKENTRACKER_MUSE_HOME, env);
+  if (env.TOKEN_PULSE_MUSE_HOME) return expandHomePath(env.TOKEN_PULSE_MUSE_HOME, env);
   return path.join(env.HOME || require("node:os").homedir(), ".local", "share", "muse");
 }
 
@@ -17856,7 +17856,7 @@ function museResumeLooksAppendOnly(fd, prevSize, prev, currentPrefixFp, currentM
 
 // Subagent logs live under .../sessions/<session>/subagent/... . Matching any
 // ancestor named "subagent" would misclassify roots when the Muse home path
-// itself contains that segment (e.g. TOKENTRACKER_MUSE_HOME=/data/subagent/muse).
+// itself contains that segment (e.g. TOKEN_PULSE_MUSE_HOME=/data/subagent/muse).
 function isMuseSubagentSessionFile(filePath, env = process.env) {
   const sessionsRoot = path.join(resolveMuseHome(env), "sessions");
   const relative = path.relative(sessionsRoot, filePath);
@@ -18176,7 +18176,7 @@ async function parseCraftIncremental({
     try { stream.destroy(); } catch {}
 
     if (!header || typeof header !== "object") {
-      if (parseError && process.env.TOKENTRACKER_DEBUG) {
+      if (parseError && process.env.TOKEN_PULSE_DEBUG) {
         process.stderr.write(
           `[craft] header parse failed for ${filePath}: ${parseError.message}\n`,
         );
@@ -19186,7 +19186,7 @@ function resolveCopilotSessionStorePaths(env = process.env) {
   return resolveCopilotDbPaths(
     {
       fileName: "session-store.db",
-      overrideEnvKey: "TOKENTRACKER_COPILOT_SESSION_STORE_DB",
+      overrideEnvKey: "TOKEN_PULSE_COPILOT_SESSION_STORE_DB",
     },
     env,
   );
@@ -20218,7 +20218,7 @@ function resolveCopilotAppDbPaths(env = process.env) {
   return resolveCopilotDbPaths(
     {
       fileName: "data.db",
-      overrideEnvKey: "TOKENTRACKER_COPILOT_APP_DB",
+      overrideEnvKey: "TOKEN_PULSE_COPILOT_APP_DB",
     },
     env,
   );
@@ -20578,7 +20578,7 @@ const GROK_ESTIMATED_INPUT_RATIO = 0.8;
 const GROK_CURSOR_VERSION = 5;
 
 function resolveGrokBuildHome(env = process.env) {
-  if (env.TOKENTRACKER_GROK_HOME) return env.TOKENTRACKER_GROK_HOME;
+  if (env.TOKEN_PULSE_GROK_HOME) return env.TOKEN_PULSE_GROK_HOME;
   if (env.GROK_HOME) return env.GROK_HOME;
   if (process.platform === "win32") {
     return pickWin32ProviderPath({
@@ -23206,7 +23206,7 @@ async function parseTraeIncremental({
 // Windows; the international build installs as "TRAE SOLO". Both expose the same
 // iCubeServerData entitlement key, so either is a valid Trae IDE install.
 function traeCandidateAppDirs(env = process.env) {
-  const override = env.TOKENTRACKER_TRAE_HOME;
+  const override = env.TOKEN_PULSE_TRAE_HOME;
   if (typeof override === "string" && override.trim().length > 0) {
     return [override.trim()];
   }
@@ -23230,7 +23230,7 @@ function traeCandidateAppDirs(env = process.env) {
   // Linux and friends: TRAE SOLO ships official builds for macOS/Windows
   // only, so there is no verified app-data layout to default to. Fall back to
   // a deterministic home-dir path (best-effort detection);
-  // TOKENTRACKER_TRAE_HOME always wins for unusual installs.
+  // TOKEN_PULSE_TRAE_HOME always wins for unusual installs.
   return [path.join(home, ".trae-solo")];
 }
 
@@ -23559,8 +23559,8 @@ function assertTraeCnBucketCovers(bucketTotals, previousTotals) {
 // Account session state: a queue record (kind: "account_session_state")
 // carrying the CANONICAL observation of ONE provider-side TRAE CN session.
 // Cloud truth for trae-cn lives at the session level
-// (tokentracker_account_session_states; ingest edge upserts via
-// tokentracker_upsert_account_session_states): identity is
+// (token-pulse_account_session_states; ingest edge upserts via
+// token-pulse_upsert_account_session_states): identity is
 // (user_id, source, session_id) - device_id is NOT identity (the usage API
 // request carries no device discriminator). Evidence split (2026-08-17, one
 // account, three real fetches 137 -> 141 -> 164): repeated-fetch id
@@ -23823,7 +23823,7 @@ async function parseTraeCnApiIncremental({
 //
 // The DeepSeek Harness SDK persists each agent session as an append-only JSONL
 // log under `<harness-home>/sessions/<project-key>/<session-id>/session.jsonl[.zstd]`
-// (default `~/.dsh/sessions`; `$DSH_HOME` / TOKENTRACKER_DSH_HOME override). The first line is a `type: "session"` header;
+// (default `~/.dsh/sessions`; `$DSH_HOME` / TOKEN_PULSE_DSH_HOME override). The first line is a `type: "session"` header;
 // every following line is a `SessionEvent` carrying `type`, `seq`, `time`
 // (epoch ms), and `data`. Token accounting rides on `assistant/message` events
 // (`data.usage`), and the model on the same event's `data.message.source.model`
@@ -23847,25 +23847,25 @@ const DSH_SESSION_TEXT_MAX_BYTES = 128 * 1024 * 1024;
 const DSH_SOURCE = "dsh";
 
 // Precedence mirrors the harness's own resolveDshHome: an explicit
-// TokenTracker override, then the harness's $DSH_HOME, then `~/.dsh`. Tests
+// TokenPulse override, then the harness's $DSH_HOME, then `~/.dsh`. Tests
 // isolate $DSH_HOME via the `withHome` helper, so honoring it here cannot leak
 // the real home past test isolation.
 function resolveDshHome(env = process.env) {
   const explicit =
-    (typeof env?.TOKENTRACKER_DSH_HOME === "string" && env.TOKENTRACKER_DSH_HOME.trim()) ||
+    (typeof env?.TOKEN_PULSE_DSH_HOME === "string" && env.TOKEN_PULSE_DSH_HOME.trim()) ||
     (typeof env?.DSH_HOME === "string" && env.DSH_HOME.trim()) ||
     "";
   if (explicit) return path.resolve(explicit);
   return path.join(os.homedir(), ".dsh");
 }
 
-// Windows users commonly run Harness inside WSL while TokenTracker itself runs
+// Windows users commonly run Harness inside WSL while TokenPulse itself runs
 // natively. Respect the repository-wide WSL mode contract and keep explicit
 // DSH home overrides authoritative: an override is a complete user choice, not
 // one half of an automatic native/WSL discovery pair.
 function resolveDshHomes(env = process.env, deps = {}) {
   const overridden = Boolean(
-    (typeof env?.TOKENTRACKER_DSH_HOME === "string" && env.TOKENTRACKER_DSH_HOME.trim()) ||
+    (typeof env?.TOKEN_PULSE_DSH_HOME === "string" && env.TOKEN_PULSE_DSH_HOME.trim()) ||
     (typeof env?.DSH_HOME === "string" && env.DSH_HOME.trim()),
   );
   const nativeHome = deps.nativeHome || resolveDshHome(env);
@@ -24849,7 +24849,7 @@ async function parseDshIncremental({ sessionFiles, cursors, queuePath, onProgres
       }
       if (!parsed.complete) snapshot.mtimeMs = -1;
     } catch (error) {
-      if (process.env.TOKENTRACKER_DEBUG) {
+      if (process.env.TOKEN_PULSE_DEBUG) {
         process.stderr.write(`[dsh] skipped ${filePath}: ${error?.message || error}\n`);
       }
       // A replacement artifact may have an old path that is no longer in the
@@ -25107,20 +25107,20 @@ function isCommandCodeSessionLogName(name) {
   );
 }
 
-// Precedence mirrors the other passive readers: an explicit TokenTracker
+// Precedence mirrors the other passive readers: an explicit TokenPulse
 // override first, then the CLI's own `~/.commandcode`.
 function resolveCommandCodeHome(env = process.env) {
-  const explicit = env?.TOKENTRACKER_COMMANDCODE_HOME;
+  const explicit = env?.TOKEN_PULSE_COMMANDCODE_HOME;
   if (typeof explicit === "string" && explicit.trim()) return path.resolve(explicit.trim());
   return path.join(os.homedir(), COMMAND_CODE_HOME_DIR);
 }
 
-// Windows users commonly run the `cmd` CLI inside WSL while TokenTracker itself
+// Windows users commonly run the `cmd` CLI inside WSL while TokenPulse itself
 // runs natively. Respect the repository-wide WSL mode contract and keep explicit
 // home overrides authoritative: an override is a complete user choice, not one
 // half of an automatic native/WSL discovery pair.
 function resolveCommandCodeHomes(env = process.env, deps = {}) {
-  const override = env?.TOKENTRACKER_COMMANDCODE_HOME;
+  const override = env?.TOKEN_PULSE_COMMANDCODE_HOME;
   const overridden = typeof override === "string" && override.trim().length > 0;
   const nativeHome = deps.nativeHome || resolveCommandCodeHome(env);
   const platform = deps.platform || process.platform;
@@ -25160,7 +25160,7 @@ async function resolveCommandCodeSessionFiles(env = process.env, deps = {}) {
   const out = new Set();
   const homes = resolveCommandCodeHomes(env, deps);
   const nativeHome = deps.nativeHome || resolveCommandCodeHome(env);
-  const overridden = typeof env?.TOKENTRACKER_COMMANDCODE_HOME === "string" && env.TOKENTRACKER_COMMANDCODE_HOME.trim();
+  const overridden = typeof env?.TOKEN_PULSE_COMMANDCODE_HOME === "string" && env.TOKEN_PULSE_COMMANDCODE_HOME.trim();
   for (const home of homes) {
     const rootFiles = [];
     try {

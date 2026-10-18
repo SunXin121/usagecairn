@@ -19,7 +19,7 @@ const {
   parseAnythingllmIncremental,
 } = require("../src/lib/rollout");
 
-const TRACKER = path.resolve(__dirname, "..", "bin", "tracker.js");
+const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
 
 function createAnythingllmDb() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "anythingllm-test-"));
@@ -84,7 +84,7 @@ function readQueue(queuePath) {
 
 test("resolveAnythingllmDbPath resolves official desktop paths and override", () => {
   assert.equal(
-    resolveAnythingllmDbPath({ TOKENTRACKER_ANYTHINGLLM_DB: "  /custom/anythingllm.db  " }, "linux"),
+    resolveAnythingllmDbPath({ TOKEN_PULSE_ANYTHINGLLM_DB: "  /custom/anythingllm.db  " }, "linux"),
     "/custom/anythingllm.db",
   );
   assert.equal(
@@ -325,9 +325,9 @@ test("sync and status commands expose the AnythingLLM Desktop integration", () =
       HOME: dir,
       USERPROFILE: dir,
       APPDATA: path.join(dir, "AppData", "Roaming"),
-      TOKENTRACKER_ANYTHINGLLM_DB: dbPath,
-      TOKENTRACKER_NO_TELEMETRY: "1",
-      TOKENTRACKER_WSL_MODE: "native-only",
+      TOKEN_PULSE_ANYTHINGLLM_DB: dbPath,
+      TOKEN_PULSE_NO_TELEMETRY: "1",
+      TOKEN_PULSE_WSL_MODE: "native-only",
     };
 
     const sync = cp.spawnSync(
@@ -337,7 +337,7 @@ test("sync and status commands expose the AnythingLLM Desktop integration", () =
     );
     assert.equal(sync.status, 0, `sync failed: ${sync.stderr || sync.stdout}`);
 
-    const queuePath = path.join(dir, ".tokentracker", "tracker", "queue.jsonl");
+    const queuePath = path.join(dir, ".token-pulse", "tracker", "queue.jsonl");
     const rows = readQueue(queuePath);
     assert.equal(rows.length, 1);
     assert.equal(rows[0].source, "anythingllm");

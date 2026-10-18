@@ -11,7 +11,7 @@
  *   - PRAGMA table_info-driven optional columns (created_at can be missing)
  *
  * Local machine has no Zed install, so fixtures are written under a tempdir
- * and passed via TOKENTRACKER_ZED_DB.
+ * and passed via TOKEN_PULSE_ZED_DB.
  */
 "use strict";
 
@@ -88,8 +88,8 @@ function threadJson({ provider = "zed.dev", model = "claude-sonnet-4", usage, cu
   });
 }
 
-test("resolveZedDbPath honors TOKENTRACKER_ZED_DB override", () => {
-  const p = resolveZedDbPath({ TOKENTRACKER_ZED_DB: "/tmp/custom-zed.db" });
+test("resolveZedDbPath honors TOKEN_PULSE_ZED_DB override", () => {
+  const p = resolveZedDbPath({ TOKEN_PULSE_ZED_DB: "/tmp/custom-zed.db" });
   assert.equal(p, "/tmp/custom-zed.db");
 });
 

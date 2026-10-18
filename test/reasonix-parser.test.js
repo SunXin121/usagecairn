@@ -196,7 +196,7 @@ test("reasonix: Windows resolves the home from USERPROFILE, not a shell-provided
 
   // Explicit overrides still take precedence over both.
   const override = resolveReasonixTelemetryFiles({
-    TOKENTRACKER_REASONIX_HOME: path.join(profile, ".reasonix"),
+    TOKEN_PULSE_REASONIX_HOME: path.join(profile, ".reasonix"),
     HOME: bogusHome,
   });
   assert.deepEqual(override, [telemetry]);
@@ -306,7 +306,7 @@ test("reasonix: an explicit override is used alone, AppData is not appended", ()
     onWin32(() => {
       assert.deepEqual(
         resolveReasonixTelemetryFiles({
-          TOKENTRACKER_REASONIX_HOME: explicit,
+          TOKEN_PULSE_REASONIX_HOME: explicit,
           USERPROFILE: profile,
           APPDATA: appData,
         }),

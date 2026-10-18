@@ -571,7 +571,7 @@ function dayKeyToIsoBounds(from, to) {
 const CACHE = new Map();
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6h
 const CACHE_SCHEMA_VERSION = "skills-exec-v3";
-const DISK_CACHE_DIR = path.join(os.homedir(), ".tokentracker", "cache", "claude-categorizer");
+const DISK_CACHE_DIR = path.join(os.homedir(), ".token-pulse", "cache", "claude-categorizer");
 
 function cacheKeyHash(key) {
   return crypto.createHash("sha1").update(key).digest("hex").slice(0, 32);

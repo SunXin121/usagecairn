@@ -9,7 +9,7 @@
  *   - created_at parsed across RFC3339, "YYYY-MM-DD HH:MM:SS", and date-only
  *   - Missing optional columns (older Goose schemas) tolerated
  *
- * Local machine has no Goose install, so we pass TOKENTRACKER_GOOSE_DB.
+ * Local machine has no Goose install, so we pass TOKEN_PULSE_GOOSE_DB.
  */
 "use strict";
 
@@ -63,9 +63,9 @@ function makeGooseDb({ rows, withAccumulated = true }) {
   return { dir, dbPath };
 }
 
-test("resolveGooseDbPath honors TOKENTRACKER_GOOSE_DB and GOOSE_PATH_ROOT", () => {
+test("resolveGooseDbPath honors TOKEN_PULSE_GOOSE_DB and GOOSE_PATH_ROOT", () => {
   assert.equal(
-    resolveGooseDbPath({ TOKENTRACKER_GOOSE_DB: "/x/y/z.db" }),
+    resolveGooseDbPath({ TOKEN_PULSE_GOOSE_DB: "/x/y/z.db" }),
     "/x/y/z.db",
   );
   const p = resolveGooseDbPath({ GOOSE_PATH_ROOT: "/opt/goose" });

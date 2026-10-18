@@ -13,7 +13,7 @@
  *
  * Local end-to-end: this user's machine has no Roo Code install, so we build a
  * synthetic fixture under a temp dir and point a custom env at it via
- * TOKENTRACKER_KILOCODE_ROOTS (Roo Code reuses the same root resolver).
+ * TOKEN_PULSE_KILOCODE_ROOTS (Roo Code reuses the same root resolver).
  */
 "use strict";
 
@@ -48,11 +48,11 @@ function setupFixture({ tasks }) {
 function fakeEnv(root) {
   return {
     HOME: os.homedir(),
-    TOKENTRACKER_KILOCODE_ROOTS: root, // Roo Code reuses resolveKilocodeRoots
+    TOKEN_PULSE_KILOCODE_ROOTS: root, // Roo Code reuses resolveKilocodeRoots
   };
 }
 
-test("resolveRoocodeTaskFiles finds tasks via TOKENTRACKER_KILOCODE_ROOTS env", () => {
+test("resolveRoocodeTaskFiles finds tasks via TOKEN_PULSE_KILOCODE_ROOTS env", () => {
   const root = setupFixture({
     tasks: [
       { uuid: "task-a", uiMessages: [] },

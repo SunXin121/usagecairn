@@ -6,9 +6,9 @@ The repo root is the Vercel project root. `vercel.json` installs the root and da
 
 ## One-click deploy
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker&project-name=tokentracker&repository-name=tokentracker&env=ACCESS_KEY&envDescription=Your%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenTracker%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenPulse&project-name=token-pulse&repository-name=token-pulse&env=ACCESS_KEY&envDescription=Your%20access%20key%20-%20the%20single%20shared%20secret%20for%20uploads%20and%20the%20dashboard.%20Server-only%3A%20never%20prefix%20it%20with%20VITE_.%20The%20database%20is%20attached%20afterwards%20via%20Vercel%20Storage%20%28it%20injects%20DATABASE_URL%20automatically%29.&envLink=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenPulse%2Fblob%2Fmain%2Fdocs%2FVERCEL.md)
 
-The button clones this repo into your own account, creates a project named `tokentracker`, and prompts for the one **server-only** environment variable, `ACCESS_KEY`. After the deploy, attach the database in the project's **Storage** tab (which injects `DATABASE_URL` automatically) and apply [`server/schema.sql`](../server/schema.sql) once in the database SQL editor — there is no other provisioning step. The numbered steps below are the manual equivalent of the button.
+The button clones this repo into your own account, creates a project named `token-pulse`, and prompts for the one **server-only** environment variable, `ACCESS_KEY`. After the deploy, attach the database in the project's **Storage** tab (which injects `DATABASE_URL` automatically) and apply [`server/schema.sql`](../server/schema.sql) once in the database SQL editor — there is no other provisioning step. The numbered steps below are the manual equivalent of the button.
 
 ## Manual setup
 
@@ -26,14 +26,14 @@ Once the repo is imported, Vercel's Git integration redeploys the server on ever
 ## Installing the collector with npx
 
 ```bash
-npx tokentracker-cli@latest init --yes
-npx tokentracker-cli@latest connect --api-url https://<deployment>.vercel.app --key <your key>
-npx tokentracker-cli@latest sync
+npx token-pulse@latest init --yes
+npx token-pulse@latest connect --api-url https://<deployment>.vercel.app --key <your key>
+npx token-pulse@latest sync
 ```
 
-`npx` only bootstraps: `init` copies a self-contained runtime (`bin` + `src` + runtime dependencies) to `~/.tokentracker/app`, and the provider hooks run `node ~/.tokentracker/app/bin/tracker.js`, so nothing depends on the npx cache. If that copy is ever missing, `~/.tokentracker/bin/notify.cjs` falls back to `npx --yes tokentracker-cli sync --auto`. For a permanent command use `npm i -g tokentracker-cli` (bins: `tokentracker`, `tokentracker-cli`, `tracker`). Inside a repo checkout `node bin/tracker.js …` is equivalent. The published package ships only `bin/` and `src/` — `server/`, `api/` and `dashboard/` stay in the repo for Vercel.
+`npx` only bootstraps: `init` copies a self-contained runtime (`bin` + `src` + runtime dependencies) to `~/.token-pulse/app`, and the provider hooks run `node ~/.token-pulse/app/bin/token-pulse.js`, so nothing depends on the npx cache. If that copy is ever missing, `~/.token-pulse/bin/notify.cjs` falls back to `npx --yes token-pulse sync --auto`. For a permanent command use `npm i -g token-pulse` (bins: `token-pulse`, `token-pulse`, `tracker`). Inside a repo checkout `node bin/token-pulse.js …` is equivalent. The published package ships only `bin/` and `src/` — `server/`, `api/` and `dashboard/` stay in the repo for Vercel.
 
-`connect` stores the destination and key in `~/.tokentracker/tracker/upload.json` with mode `600`, so hook-spawned background syncs upload without touching your shell profile; `TOKENTRACKER_API_URL` / `TOKENTRACKER_ACCESS_KEY` still override per invocation on the collector side (`connect --show` prints the current destination, `connect --clear` removes it). `sync` scans provider records into `~/.tokentracker/tracker/queue.jsonl` and uploads snapshots; `upload` replays the same local history after a failure and is safe to repeat. On the deployed dashboard enter the same key — the browser keeps it in session storage only, and sign out clears it. Use HTTPS; never share the key or put it in screenshots, URLs or extensions.
+`connect` stores the destination and key in `~/.token-pulse/tracker/upload.json` with mode `600`, so hook-spawned background syncs upload without touching your shell profile; `TOKEN_PULSE_API_URL` / `TOKEN_PULSE_ACCESS_KEY` still override per invocation on the collector side (`connect --show` prints the current destination, `connect --clear` removes it). `sync` scans provider records into `~/.token-pulse/tracker/queue.jsonl` and uploads snapshots; `upload` replays the same local history after a failure and is safe to repeat. On the deployed dashboard enter the same key — the browser keeps it in session storage only, and sign out clears it. Use HTTPS; never share the key or put it in screenshots, URLs or extensions.
 
 ## API
 

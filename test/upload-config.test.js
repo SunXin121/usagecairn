@@ -27,7 +27,7 @@ test('persisted credentials let background hooks upload without env vars', async
     assert.equal(resolved.source, 'file');
     assert.equal(resolved.apiUrl, 'https://tracker.example.com');
 
-    const envWins = resolveUploadConfig({ queuePath, env: { TOKENTRACKER_API_URL: 'http://localhost:3000' } });
+    const envWins = resolveUploadConfig({ queuePath, env: { TOKEN_PULSE_API_URL: 'http://localhost:3000' } });
     assert.equal(envWins.source, 'env');
     assert.equal(envWins.apiUrl, 'http://localhost:3000');
 
@@ -60,6 +60,6 @@ test('connect rejects unsafe URLs and empty keys, accepts any key format, and ca
     await cmdConnect(['--api-url', 'https://tracker.example.com', '--key', 'my-custom-key-2026'], { queuePath, log: () => {} });
     assert.equal((await cmdConnect(['--clear'], { queuePath, log: () => {} })).cleared, true);
     assert.deepEqual(await readUploadConfig(queuePath), { apiUrl: null, accessKey: null });
-    await assert.rejects(uploadQueue({ queuePath, env: {}, request: async () => ({ ok: true, status: 200 }) }), /tracker connect/);
+    await assert.rejects(uploadQueue({ queuePath, env: {}, request: async () => ({ ok: true, status: 200 }) }), /token-pulse connect/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });

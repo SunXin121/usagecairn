@@ -84,7 +84,7 @@ async function writeSession(home, { date, dir, lines }) {
 async function setup() {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-minimax-code-"));
   const home = path.join(tmp, ".minimax");
-  const env = { ...process.env, HOME: tmp, TOKENTRACKER_MINIMAX_HOME: home };
+  const env = { ...process.env, HOME: tmp, TOKEN_PULSE_MINIMAX_HOME: home };
   return {
     tmp,
     home,
@@ -94,9 +94,9 @@ async function setup() {
   };
 }
 
-test("resolveMinimaxCodeHome honors TOKENTRACKER_MINIMAX_HOME and defaults to ~/.minimax", () => {
+test("resolveMinimaxCodeHome honors TOKEN_PULSE_MINIMAX_HOME and defaults to ~/.minimax", () => {
   assert.equal(
-    resolveMinimaxCodeHome({ HOME: "/home/u", TOKENTRACKER_MINIMAX_HOME: "/custom/mm" }),
+    resolveMinimaxCodeHome({ HOME: "/home/u", TOKEN_PULSE_MINIMAX_HOME: "/custom/mm" }),
     "/custom/mm",
   );
   if (process.platform !== "win32") {

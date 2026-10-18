@@ -5,7 +5,7 @@ const { expandHome } = require("./scan-roots");
 const { readOpencodeDbMessages, parseOpencodeDbIncremental, normalizeOpencodeTokens } = require("./rollout");
 
 function resolveDumateDbPaths({ home = os.homedir(), env = process.env, platform = process.platform } = {}) {
-  const override = expandHome(env.TOKENTRACKER_DUMATE_HOME, home);
+  const override = expandHome(env.TOKEN_PULSE_DUMATE_HOME, home);
   const appdata = typeof env.APPDATA === "string" && env.APPDATA.trim()
     ? env.APPDATA.trim() : path.join(home, "AppData", "Roaming");
   if (!override && platform !== "win32") return [];

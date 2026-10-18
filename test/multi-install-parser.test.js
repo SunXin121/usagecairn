@@ -115,14 +115,14 @@ test("cursor-store retry preserves the activated fallback namespaces", async () 
       parserFn: async ({ cursors: current }) => {
         current.opencode = { native: { fallback: true }, wsl: { fallback: true } };
         const error = new Error("retry");
-        error.code = "TOKENTRACKER_CURSOR_STORE_RETRY";
+        error.code = "TOKEN_PULSE_CURSOR_STORE_RETRY";
         throw error;
       },
       providerName: "opencode",
       cursors,
       getParams: () => ({}),
     }),
-    (error) => error?.code === "TOKENTRACKER_CURSOR_STORE_RETRY",
+    (error) => error?.code === "TOKEN_PULSE_CURSOR_STORE_RETRY",
   );
   assert.deepEqual(cursors.opencode, {
     native: { fallback: true },

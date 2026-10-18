@@ -104,12 +104,12 @@ function normalizeWslMode(value) {
 }
 
 function getWslMode(env = process.env) {
-  const raw = normalizeWslMode(env.TOKENTRACKER_WSL_MODE);
+  const raw = normalizeWslMode(env.TOKEN_PULSE_WSL_MODE);
   return WSL_MODES.has(raw) ? raw : "wsl-first";
 }
 
 function isInvalidWslMode(env = process.env) {
-  const value = env.TOKENTRACKER_WSL_MODE;
+  const value = env.TOKEN_PULSE_WSL_MODE;
   if (value == null || String(value).trim() === "") return false;
   return !WSL_MODES.has(normalizeWslMode(value));
 }
@@ -243,7 +243,7 @@ function mapWslCwdToUnc(cwd, transcriptPath) {
 
 function snapshotSqliteDb(dbPath) {
   const tmpRoot = fssync.mkdtempSync(
-    path.join(require("node:os").tmpdir(), "tokentracker-wsl-snap-"),
+    path.join(require("node:os").tmpdir(), "token-pulse-wsl-snap-"),
   );
   const target = path.join(tmpRoot, path.basename(dbPath));
   fssync.copyFileSync(dbPath, target);

@@ -116,7 +116,7 @@ const REAL_FRAMES = [
 ];
 
 test("resolveClaudeScienceDbPaths finds default, multi-org and legacy-named DBs", (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-paths-");
+  const dir = tmpdir(t, "token-pulse-cs-paths-");
   const root = path.join(dir, ".claude-science");
   fs.mkdirSync(path.join(root, "orgs", "acme"), { recursive: true });
   fs.mkdirSync(path.join(root, "orgs", "globex"), { recursive: true });
@@ -136,14 +136,14 @@ test("resolveClaudeScienceDbPaths finds default, multi-org and legacy-named DBs"
 });
 
 test("resolveClaudeScienceDbPaths returns empty when nothing is installed", (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-none-");
+  const dir = tmpdir(t, "token-pulse-cs-none-");
   assert.deepEqual(resolveClaudeScienceDbPaths({ home: dir, env: {} }), []);
 });
 
 test("on Windows the WSL distro home is scanned for Claude Science", (t) => {
   // Claude Science has no native Windows build — Windows users run it inside
   // WSL, so the DB lives on the distro's ext4 home.
-  const dir = tmpdir(t, "tokentracker-cs-wsl-");
+  const dir = tmpdir(t, "token-pulse-cs-wsl-");
   const winHome = path.join(dir, "winhome");
   const wslRoot = path.join(dir, "wsl", ".claude-science");
   fs.mkdirSync(winHome, { recursive: true });
@@ -169,7 +169,7 @@ test("on Windows the WSL distro home is scanned for Claude Science", (t) => {
 });
 
 test("parseClaudeScienceIncremental aggregates frame tokens into half-hour buckets", async (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-");
+  const dir = tmpdir(t, "token-pulse-cs-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   runSql(dbPath, FRAMES_SCHEMA);
@@ -252,7 +252,7 @@ test("parseClaudeScienceIncremental aggregates frame tokens into half-hour bucke
 // Science itself recorded. If input_tokens is ever treated as pure non-cached
 // input again, every one of these blows past the tolerance.
 test("emitted tokens reprice to Claude Science's own recorded cost", async (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-cost-");
+  const dir = tmpdir(t, "token-pulse-cs-cost-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   runSql(dbPath, FRAMES_SCHEMA);
@@ -303,7 +303,7 @@ test("emitted tokens reprice to Claude Science's own recorded cost", async (t) =
 });
 
 test("aux_* counters are counted as real usage, with their own cache peeled off", async (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-aux-");
+  const dir = tmpdir(t, "token-pulse-cs-aux-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   runSql(dbPath, FRAMES_SCHEMA);
@@ -336,7 +336,7 @@ test("aux_* counters are counted as real usage, with their own cache peeled off"
 });
 
 test("an older operon-cli.db without aux_* columns still parses", async (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-legacy-");
+  const dir = tmpdir(t, "token-pulse-cs-legacy-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   // Pre-migration schema: no aux_* columns at all.
@@ -381,7 +381,7 @@ async function countSnapshots(t, run) {
   const created = [];
   fs.mkdtempSync = function (prefix, ...rest) {
     const out = realMkdtemp.call(this, prefix, ...rest);
-    if (String(prefix).includes("tokentracker-wsl-snap-")) created.push(out);
+    if (String(prefix).includes("token-pulse-wsl-snap-")) created.push(out);
     return out;
   };
   t.after(() => {
@@ -401,7 +401,7 @@ test("readClaudeScienceFrames snapshots a WAL DB reached over a WSL UNC path", a
   // to open the WAL or read a torn state — so the file must be copied locally
   // first. A leading extra slash makes isUncPath() see "//…" while staying
   // readable on POSIX (same stand-in the claude dual-install suite uses).
-  const dir = tmpdir(t, "tokentracker-cs-unc-");
+  const dir = tmpdir(t, "token-pulse-cs-unc-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   runSql(dbPath, FRAMES_SCHEMA);
@@ -445,7 +445,7 @@ test("readClaudeScienceFrames snapshots a WAL DB reached over a WSL UNC path", a
 });
 
 test("parseClaudeScienceIncremental is idempotent across repeated syncs", async (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-idem-");
+  const dir = tmpdir(t, "token-pulse-cs-idem-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   runSql(dbPath, FRAMES_SCHEMA);
@@ -477,7 +477,7 @@ test("parseClaudeScienceIncremental is idempotent across repeated syncs", async 
 });
 
 test("parseClaudeScienceIncremental subtracts old totals when a frame grows", async (t) => {
-  const dir = tmpdir(t, "tokentracker-cs-grow-");
+  const dir = tmpdir(t, "token-pulse-cs-grow-");
   const dbPath = path.join(dir, "operon-cli.db");
   const queuePath = path.join(dir, "queue.jsonl");
   runSql(dbPath, FRAMES_SCHEMA);

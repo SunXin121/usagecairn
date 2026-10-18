@@ -63,7 +63,7 @@ function setupFixture({ sessions, extraFiles = {} }) {
 }
 
 function fakeEnv(home, extra = {}) {
-  return { HOME: home, TOKENTRACKER_CLINE_HOME: home, ...extra };
+  return { HOME: home, TOKEN_PULSE_CLINE_HOME: home, ...extra };
 }
 
 function queueRows(queuePath) {
@@ -141,9 +141,9 @@ test("resolveClineSessionsDir honors Cline's own env chain and our override", ()
     resolveClineSessionsDir({ HOME: home, CLINE_SESSION_DATA_DIR: "/opt/sessions" }),
     "/opt/sessions",
   );
-  // TokenTracker's own override wins over Cline's.
+  // TokenPulse's own override wins over Cline's.
   assert.equal(
-    resolveClineSessionsDir({ HOME: home, TOKENTRACKER_CLINE_HOME: "/tt", CLINE_DIR: "/opt/cline" }),
+    resolveClineSessionsDir({ HOME: home, TOKEN_PULSE_CLINE_HOME: "/tt", CLINE_DIR: "/opt/cline" }),
     path.join("/tt", "data", "sessions"),
   );
   // Default: ~/.cline/data/sessions.
@@ -155,14 +155,14 @@ test("resolveClineSessionsDir honors Cline's own env chain and our override", ()
 
 test("resolveClineSessionsDirs does not probe WSL when a path override is set", () => {
   const overridden = resolveClineSessionsDirs(
-    { HOME: "/tmp/home", CLINE_DIR: "/opt/cline", TOKENTRACKER_WSL_MODE: "both" },
+    { HOME: "/tmp/home", CLINE_DIR: "/opt/cline", TOKEN_PULSE_WSL_MODE: "both" },
     { platform: "win32", discoverWslHome: () => "\\\\wsl$\\Ubuntu\\.cline" },
   );
   assert.deepEqual(overridden, [path.join("/opt/cline", "data", "sessions")]);
 
   // Without an override on win32 the distro copy is unioned in as well.
   const unioned = resolveClineSessionsDirs(
-    { HOME: "C:\\Users\\me", TOKENTRACKER_WSL_MODE: "both" },
+    { HOME: "C:\\Users\\me", TOKEN_PULSE_WSL_MODE: "both" },
     { platform: "win32", existsSync: () => false, discoverWslHome: () => "\\\\wsl$\\Ubuntu\\.cline\\data\\sessions" },
   );
   assert.deepEqual(unioned, ["\\\\wsl$\\Ubuntu\\.cline\\data\\sessions"]);

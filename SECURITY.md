@@ -10,7 +10,7 @@ Only the **latest minor release** is supported with security fixes. This is a sm
 
 Instead, use one of these private channels:
 
-- **GitHub Private Vulnerability Reporting**: [Report a vulnerability](https://github.com/SunXin121/TokenTracker/security/advisories/new)
+- **GitHub Private Vulnerability Reporting**: [Report a vulnerability](https://github.com/SunXin121/token-pulse/security/advisories/new)
 - **Email**: open a GitHub issue asking the maintainer to enable an alternative private channel if you can't use GitHub Security Advisories
 
 When reporting, please include:
@@ -25,7 +25,7 @@ You can expect an initial response within a few days. Once a fix is ready, it wi
 
 ## Scope
 
-TokenTracker reads AI CLI logs from your home directory, stores scalar usage
+TokenPulse reads AI CLI logs from your home directory, stores scalar usage
 counts, uploads them to a PostgreSQL instance you control, and renders them in a
 web dashboard. The security-relevant surfaces are:
 
@@ -47,4 +47,4 @@ web dashboard. The security-relevant surfaces are:
 
 ## Privacy Commitment
 
-TokenTracker's foundational privacy rule: **token counts and timestamps only — never any prompt content, response content, or file contents from user code**. Any change that risks violating this is treated as a security issue.
+TokenPulse's foundational privacy rule: **token counts and timestamps only — never any prompt content, response content, or file contents from user code**. Any change that risks violating this is treated as a security issue.

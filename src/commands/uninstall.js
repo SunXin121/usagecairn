@@ -28,7 +28,7 @@ const { removeOpenclawHookConfig } = require("../lib/openclaw-hook");
 const { removeOpenclawSessionPluginConfig } = require("../lib/openclaw-session-plugin");
 const { removeGrokHook } = require("../lib/grok-hook");
 const { removeOmpHook } = require("../lib/omp-hook");
-const { resolveTrackerPaths } = require("../lib/tracker-paths");
+const { resolveTrackerPaths } = require("../lib/pulse-paths");
 
 async function cmdUninstall(argv) {
   const opts = parseArgs(argv);
@@ -36,7 +36,7 @@ async function cmdUninstall(argv) {
   const { trackerDir, binDir } = await resolveTrackerPaths({ home });
   const codexHome = process.env.CODEX_HOME || path.join(home, ".codex");
   const codexConfigPath = path.join(codexHome, "config.toml");
-  const acodeHome = process.env.TOKENTRACKER_ACODE_HOME || path.join(home, ".acode");
+  const acodeHome = process.env.TOKEN_PULSE_ACODE_HOME || path.join(home, ".acode");
   const acodeConfigPath = path.join(acodeHome, "config.toml");
   const codeHome = process.env.CODE_HOME || path.join(home, ".code");
   const codeConfigPath = path.join(codeHome, "config.toml");
@@ -142,10 +142,10 @@ async function cmdUninstall(argv) {
   // Deliberately NOT removed by --purge: the machine-identity seed lets a
   // reinstall reuse the same cloud device row instead of double-counting the
   // replayed history under a new device (issue #176).
-  const machineIdSeedPath = path.join(home, ".config", "tokentracker", "machine-id");
+  const machineIdSeedPath = path.join(home, ".config", "token-pulse", "machine-id");
   let machineIdSeedKept = false;
   if (opts.purge) {
-    await fs.rm(path.join(home, ".tokentracker"), { recursive: true, force: true }).catch(() => {});
+    await fs.rm(path.join(home, ".token-pulse"), { recursive: true, force: true }).catch(() => {});
     machineIdSeedKept = await fs.access(machineIdSeedPath).then(
       () => true,
       () => false,
@@ -161,7 +161,7 @@ async function cmdUninstall(argv) {
           : codexRestore?.skippedReason === "no-backup-not-installed"
             ? "- Codex notify: skipped (no backup; not installed)"
             : codexRestore?.skippedReason === "current-not-managed"
-              ? "- Codex notify: skipped (current notify is not managed by TokenTracker)"
+              ? "- Codex notify: skipped (current notify is not managed by TokenPulse)"
             : "- Codex notify: no change"
         : "- Codex notify: skipped (config.toml not found)",
       acodeConfigExists
@@ -170,7 +170,7 @@ async function cmdUninstall(argv) {
           : acodeRestore?.skippedReason === "no-backup-not-installed"
             ? "- AStudio notify: skipped (no backup; not installed)"
             : acodeRestore?.skippedReason === "current-not-managed"
-              ? "- AStudio notify: skipped (current notify is not managed by TokenTracker)"
+              ? "- AStudio notify: skipped (current notify is not managed by TokenPulse)"
               : "- AStudio notify: no change"
         : "- AStudio notify: skipped (config.toml not found)",
       codeConfigExists
@@ -179,7 +179,7 @@ async function cmdUninstall(argv) {
           : codeRestore?.skippedReason === "no-backup-not-installed"
             ? "- Every Code notify: skipped (no backup; not installed)"
             : codeRestore?.skippedReason === "current-not-managed"
-              ? "- Every Code notify: skipped (current notify is not managed by TokenTracker)"
+              ? "- Every Code notify: skipped (current notify is not managed by TokenPulse)"
             : "- Every Code notify: no change"
         : "- Every Code notify: skipped (config.toml not found)",
       claudeConfigExists
@@ -240,7 +240,7 @@ async function cmdUninstall(argv) {
         ? `- Grok Build hook removed: ${grokHookRemove.hookPath}`
         : "- Grok Build hook: no change",
       formatOmpHookRemoveLine(ompHookRemove),
-      opts.purge ? `- Purged: ${path.join(home, ".tokentracker")}` : "- Purge: skipped (use --purge)",
+      opts.purge ? `- Purged: ${path.join(home, ".token-pulse")}` : "- Purge: skipped (use --purge)",
       ...(machineIdSeedKept
         ? [`- Kept: ${machineIdSeedPath} (cloud device identity — a reinstall reuses the same device; delete it to fully reset)`]
         : []),

@@ -6,7 +6,7 @@ const { ensureDir, readJson, writeJson } = require("./fs");
 const { buildNotifyCommand } = require("./notify-command");
 
 const DEFAULT_EVENT = "SessionEnd";
-const DEFAULT_HOOK_NAME = "tokentracker";
+const DEFAULT_HOOK_NAME = "token-pulse";
 const DEFAULT_MATCHER = "exit|clear|logout|prompt_input_exit|other";
 
 function resolveGeminiConfigDir({ home = os.homedir(), env = process.env } = {}) {

@@ -220,12 +220,12 @@ function latestCommandCodeTokens(queuePath) {
     .reduce((sum, row) => sum + row.total_tokens, 0);
 }
 
-test("resolveCommandCodeHome honors TOKENTRACKER_COMMANDCODE_HOME, then defaults to ~/.commandcode", () => {
+test("resolveCommandCodeHome honors TOKEN_PULSE_COMMANDCODE_HOME, then defaults to ~/.commandcode", () => {
   assert.equal(
-    resolveCommandCodeHome({ TOKENTRACKER_COMMANDCODE_HOME: "/tmp/cc" }),
+    resolveCommandCodeHome({ TOKEN_PULSE_COMMANDCODE_HOME: "/tmp/cc" }),
     path.resolve("/tmp/cc"),
   );
-  assert.equal(resolveCommandCodeHome({ TOKENTRACKER_COMMANDCODE_HOME: "  " }), path.join(os.homedir(), ".commandcode"));
+  assert.equal(resolveCommandCodeHome({ TOKEN_PULSE_COMMANDCODE_HOME: "  " }), path.join(os.homedir(), ".commandcode"));
   assert.equal(resolveCommandCodeHome({}), path.join(os.homedir(), ".commandcode"));
 });
 
@@ -245,16 +245,16 @@ test("resolveCommandCodeHomes follows the Windows native/WSL mode matrix", () =>
   };
 
   assert.deepEqual(resolveCommandCodeHomes({}, deps), [wslHome], "default is wsl-first");
-  assert.deepEqual(resolveCommandCodeHomes({ TOKENTRACKER_WSL_MODE: "native-first" }, deps), [nativeHome]);
-  assert.deepEqual(resolveCommandCodeHomes({ TOKENTRACKER_WSL_MODE: "wsl-only" }, deps), [wslHome]);
-  assert.deepEqual(resolveCommandCodeHomes({ TOKENTRACKER_WSL_MODE: "native-only" }, deps), [nativeHome]);
-  assert.deepEqual(resolveCommandCodeHomes({ TOKENTRACKER_WSL_MODE: "both" }, deps), [nativeHome, wslHome]);
+  assert.deepEqual(resolveCommandCodeHomes({ TOKEN_PULSE_WSL_MODE: "native-first" }, deps), [nativeHome]);
+  assert.deepEqual(resolveCommandCodeHomes({ TOKEN_PULSE_WSL_MODE: "wsl-only" }, deps), [wslHome]);
+  assert.deepEqual(resolveCommandCodeHomes({ TOKEN_PULSE_WSL_MODE: "native-only" }, deps), [nativeHome]);
+  assert.deepEqual(resolveCommandCodeHomes({ TOKEN_PULSE_WSL_MODE: "both" }, deps), [nativeHome, wslHome]);
 });
 
 test("resolveCommandCodeHomes keeps explicit overrides authoritative and never probes WSL off Windows", () => {
   let probes = 0;
   const overridden = resolveCommandCodeHomes(
-    { TOKENTRACKER_COMMANDCODE_HOME: "/custom/.commandcode", TOKENTRACKER_WSL_MODE: "both" },
+    { TOKEN_PULSE_COMMANDCODE_HOME: "/custom/.commandcode", TOKEN_PULSE_WSL_MODE: "both" },
     {
       platform: "win32",
       discoverWslHome() {
@@ -303,7 +303,7 @@ test("resolveCommandCodeSessionFiles discovers project transcripts and skips non
   fs.writeFileSync(path.join(home, "projects", "stray.jsonl"), `${messageLine({ id: "stray" })}\n`, "utf8");
 
   try {
-    const files = await resolveCommandCodeSessionFiles({ TOKENTRACKER_COMMANDCODE_HOME: home });
+    const files = await resolveCommandCodeSessionFiles({ TOKEN_PULSE_COMMANDCODE_HOME: home });
     assert.deepEqual(files, [filePath, otherPath].sort((a, b) => a.localeCompare(b)));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
@@ -1258,7 +1258,7 @@ for (const [level, code] of [["root", "EACCES"], ["project", "EPERM"], ["root", 
     const originalReadDir = fsp.readdir;
     const failedPath = level === "root" ? path.join(home, "projects") : projectDir;
     const injected = Object.assign(new Error("synthetic discovery failure"), { code });
-    const env = { TOKENTRACKER_COMMANDCODE_HOME: home };
+    const env = { TOKEN_PULSE_COMMANDCODE_HOME: home };
     try {
       fsp.readdir = async function (file, ...args) {
         if (file === failedPath) throw injected;
@@ -1268,7 +1268,7 @@ for (const [level, code] of [["root", "EACCES"], ["project", "EPERM"], ["root", 
       fsp.readdir = originalReadDir;
       assert.deepEqual(await resolveCommandCodeSessionFiles(env), [filePath]);
       assert.deepEqual(await resolveCommandCodeSessionFiles({
-        TOKENTRACKER_COMMANDCODE_HOME: path.join(dir, "missing"),
+        TOKEN_PULSE_COMMANDCODE_HOME: path.join(dir, "missing"),
       }), []);
     } finally {
       fsp.readdir = originalReadDir;
@@ -1415,7 +1415,7 @@ for (const probe of ["native", "wsl"]) {
       },
     };
     const discover = () => resolveCommandCodeHomes({
-      TOKENTRACKER_WSL_MODE: probe === "native" ? "native-only" : "wsl-only",
+      TOKEN_PULSE_WSL_MODE: probe === "native" ? "native-only" : "wsl-only",
     }, deps);
     if (probe === "native") assert.throws(discover, (error) => error === injected);
     else assert.deepEqual(discover(), []);
@@ -1429,7 +1429,7 @@ test("Command Code retains WSL history while immediately counting healthy native
   const secondFile = path.join(secondProject, "second.jsonl");
   fs.mkdirSync(secondProject, { recursive: true });
   fs.writeFileSync(secondFile, `${headerLine("second-session", repoDir)}\n${messageLine({ id: "second-root-m1", costUsd: 0.42 })}\n`);
-  const env = { TOKENTRACKER_WSL_MODE: "both" };
+  const env = { TOKEN_PULSE_WSL_MODE: "both" };
   const deps = {
     platform: "win32", nativeHome: home,
     existsSync: (candidate) => candidate === home,
@@ -1675,10 +1675,10 @@ for (const scenario of ["rediscovered deletion", "explicit empty", "deleted afte
     } else if (scenario === "reinstalled root") {
       fs.renameSync(home, home + ".old");
       fs.mkdirSync(path.join(home, "projects"), { recursive: true });
-      options.sessionFiles = await resolveCommandCodeSessionFiles({ TOKENTRACKER_COMMANDCODE_HOME: home });
+      options.sessionFiles = await resolveCommandCodeSessionFiles({ TOKEN_PULSE_COMMANDCODE_HOME: home });
     } else {
       fs.unlinkSync(filePath);
-      if (scenario === "rediscovered deletion") options.sessionFiles = await resolveCommandCodeSessionFiles({ TOKENTRACKER_COMMANDCODE_HOME: home });
+      if (scenario === "rediscovered deletion") options.sessionFiles = await resolveCommandCodeSessionFiles({ TOKEN_PULSE_COMMANDCODE_HOME: home });
     }
     for (let run = 0; run < 2; run++) {
       roundTripLifecycleCursors(options);
@@ -1703,7 +1703,7 @@ test("durable history follows a home switch without recounting a duplicate and a
   const switched = path.join(switchedHome, "projects", "fixture", "new-session.jsonl");
   fs.mkdirSync(path.dirname(switched), { recursive: true });
   fs.copyFileSync(filePath, switched);
-  options.sessionFiles = await resolveCommandCodeSessionFiles({ TOKENTRACKER_COMMANDCODE_HOME: switchedHome });
+  options.sessionFiles = await resolveCommandCodeSessionFiles({ TOKEN_PULSE_COMMANDCODE_HOME: switchedHome });
   roundTripLifecycleCursors(options);
   await parseCommandCodeIncremental(options);
   assert.deepEqual(fs.readFileSync(options.queuePath), hourly);

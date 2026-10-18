@@ -26,7 +26,7 @@ function buildAcodeNotifyCmd(notifyPath, options) {
 // Is this notify command one we wrote? Strict array equality is not a safe
 // test, because the command is not a stable constant across invocations:
 //   - argv[0] on Windows is an absolute `process.execPath` (#361). The desktop
-//     app runs the bundled EmbeddedServer\node.exe, `tokentracker` in a
+//     app runs the bundled EmbeddedServer\node.exe, `token-pulse` in a
 //     terminal runs the system / nvm Node, and an nvm version switch moves it
 //     again. All three write a different argv[0] on the same machine.
 //   - the notify.cjs path itself varies with binDir (npm global vs embedded).
@@ -35,7 +35,7 @@ function buildAcodeNotifyCmd(notifyPath, options) {
 // `uninstall` skips it as `current-not-managed`, leaving a dead notify entry
 // that points at a deleted app directory and fails on every Codex turn.
 // Match on the notify.cjs tail instead — the path must live under
-// ~/.tokentracker/, and the args after it must match so the Codex command is
+// ~/.token-pulse/, and the args after it must match so the Codex command is
 // never confused with the Every Code one (`--source=every-code`).
 function isManagedNotifyCmd(cmd, expectedNotify) {
   if (!Array.isArray(cmd)) return false;
@@ -49,7 +49,7 @@ function isManagedNotifyCmd(cmd, expectedNotify) {
 
   const index = notifyIndexOf(cmd);
   if (index === -1) return false;
-  if (!cmd[index].replace(/\\/g, "/").includes("/.tokentracker/")) return false;
+  if (!cmd[index].replace(/\\/g, "/").includes("/.token-pulse/")) return false;
 
   if (!Array.isArray(expectedNotify)) return true;
   const expectedIndex = notifyIndexOf(expectedNotify);
@@ -83,7 +83,7 @@ async function upsertNotify({
     // see isManagedNotifyCmd) is NOT the user's original: recording it would
     // make uninstall "restore" our own dead command forever. Treat it as an
     // absence instead. Reachable when the backup file is gone but the config
-    // entry is not, e.g. after the user deletes ~/.tokentracker.
+    // entry is not, e.g. after the user deletes ~/.token-pulse.
     const hasForeignNotify =
       Array.isArray(existingNotify) && !isManagedNotifyCmd(existingNotify, notifyCmd);
     if (captureOriginal && (hasForeignNotify || replaceOriginal)) {

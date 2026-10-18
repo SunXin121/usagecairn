@@ -1,14 +1,14 @@
 {
-  "name": "tokentracker-cli",
+  "name": "token-pulse",
   "version": "1.4.5",
   "description": "Local AI token usage collector with a PostgreSQL-backed web dashboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SunXin121/TokenTracker.git"
+    "url": "git+https://github.com/SunXin121/token-pulse.git"
   },
-  "homepage": "https://github.com/SunXin121/TokenTracker#readme",
+  "homepage": "https://github.com/SunXin121/token-pulse#readme",
   "bugs": {
-    "url": "https://github.com/SunXin121/TokenTracker/issues"
+    "url": "https://github.com/SunXin121/token-pulse/issues"
   },
   "keywords": [
     "tokens",
@@ -21,9 +21,7 @@
   ],
   "main": "src/cli.js",
   "bin": {
-    "tracker": "bin/tracker.js",
-    "tokentracker": "bin/tracker.js",
-    "tokentracker-cli": "bin/tracker.js"
+    "token-pulse": "bin/token-pulse.js"
   },
   "files": [
     "bin/",

@@ -4,8 +4,8 @@ const fs = require("node:fs/promises");
 
 const { ensureDir } = require("./fs");
 
-const DEFAULT_PLUGIN_NAME = "tokentracker.js";
-const PLUGIN_MARKER = "TOKENTRACKER_PLUGIN";
+const DEFAULT_PLUGIN_NAME = "token-pulse.js";
+const PLUGIN_MARKER = "TOKEN_PULSE_PLUGIN";
 const DEFAULT_EVENT = "session.updated";
 
 function resolveOpencodeConfigDir({ home = os.homedir(), env = process.env } = {}) {
@@ -54,9 +54,9 @@ function buildOpencodePlugin({ notifyPath }) {
     // the plugin load instead of erroring on every startup. Usage itself does not
     // depend on this hook: opencode rows are parsed from the on-disk storage and
     // opencode.db, and the hook only makes a sync happen sooner.
-    `export const TokenTrackerPlugin = server;\n` +
+    `export const TokenPulsePlugin = server;\n` +
     `export default {\n` +
-    `  id: "tokentracker",\n` +
+    `  id: "token-pulse",\n` +
     `  server,\n` +
     `  setup: async () => {},\n` +
     `};\n`

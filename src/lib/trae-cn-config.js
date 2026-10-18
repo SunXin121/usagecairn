@@ -20,11 +20,11 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const TRAE_CN_HOME_ENV = "TOKENTRACKER_TRAE_CN_HOME";
+const TRAE_CN_HOME_ENV = "TOKEN_PULSE_TRAE_CN_HOME";
 // The TRAE CN usage read transmits the locally stored sign-in JWT to TRAE's
 // official endpoint, so it is strictly opt-in: nothing is sent unless the
 // user explicitly sets this flag. Any value other than 1/true keeps it off.
-const TRAE_CN_USAGE_ENV = "TOKENTRACKER_TRAE_CN_USAGE";
+const TRAE_CN_USAGE_ENV = "TOKEN_PULSE_TRAE_CN_USAGE";
 
 function isTraeCnUsageEnabled(env = process.env) {
   const value = env ? env[TRAE_CN_USAGE_ENV] : undefined;
@@ -58,7 +58,7 @@ const TRAE_CN_IV_LEN = 16;
 // client's byteCrypto.js (XOR the pair to recover the KDF secret). Failure
 // signature when TRAE ships a new key: readTraeCnAuthFromStorage throws
 // "Trae CN auth payload is malformed", sync skips the source, and
-// `tokentracker status` reports auth "malformed" — re-extract the pair
+// `token-pulse status` reports auth "malformed" — re-extract the pair
 // from the updated client to restore decryption.
 const TRAE_CN_JG = Buffer.from([
   82, 9, 106, 213, 48, 54, 165, 56, 191, 64, 163, 158, 129, 243, 215, 251, 124, 227, 57, 130,
@@ -325,9 +325,9 @@ async function fetchTraeCnUsagePage({
       // TRAE_CN_USAGE_URL, a compile-time constant HTTPS endpoint of the
       // official API - callers cannot redirect the destination (the url
       // parameter is ignored; pinned by the "sends the exact request" test).
-      // The whole flow is behind the explicit TOKENTRACKER_TRAE_CN_USAGE
+      // The whole flow is behind the explicit TOKEN_PULSE_TRAE_CN_USAGE
       // opt-in, the JWT is never logged, never written to the queue/cursor
-      // state, and never uploaded to the TokenTracker cloud (queue rows carry
+      // state, and never uploaded to the TokenPulse cloud (queue rows carry
       // token counters only; transport exceptions are sanitized).
       response = await fetchImpl(TRAE_CN_USAGE_URL, {
         method: "POST",

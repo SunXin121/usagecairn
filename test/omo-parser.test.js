@@ -179,10 +179,10 @@ test("omo and omp keep independent cursors and source buckets", async () => {
   }
 });
 
-test("resolveOmoAgentDir honors TOKENTRACKER_OMO_AGENT_DIR and ignores pi/omp overrides", async () => {
+test("resolveOmoAgentDir honors TOKEN_PULSE_OMO_AGENT_DIR and ignores pi/omp overrides", async () => {
   const explicit = path.join(os.tmpdir(), "explicit-omo-agent");
   assert.equal(
-    resolveOmoAgentDir({ TOKENTRACKER_OMO_AGENT_DIR: explicit }),
+    resolveOmoAgentDir({ TOKEN_PULSE_OMO_AGENT_DIR: explicit }),
     explicit,
   );
 
@@ -217,7 +217,7 @@ test("resolveOmoSessionFiles and resolveOmoSubagentFiles scan the OmO agent dir"
     await fs.mkdir(nested, { recursive: true });
     await fs.writeFile(path.join(nested, "sub.jsonl"), "", "utf8");
 
-    const env = { TOKENTRACKER_OMO_AGENT_DIR: agentDir };
+    const env = { TOKEN_PULSE_OMO_AGENT_DIR: agentDir };
     assert.deepEqual(resolveOmoSessionFiles(env), [path.join(cwdDir, "main.jsonl")]);
     assert.deepEqual(resolveOmoSubagentFiles(env), [path.join(nested, "sub.jsonl")]);
   } finally {
@@ -304,15 +304,15 @@ test("omoAgentDirCollidesWithOmp is true only when both overrides resolve to the
   try {
     assert.equal(
       omoAgentDirCollidesWithOmp({
-        TOKENTRACKER_OMO_AGENT_DIR: shared,
-        TOKENTRACKER_OMP_AGENT_DIR: shared,
+        TOKEN_PULSE_OMO_AGENT_DIR: shared,
+        TOKEN_PULSE_OMP_AGENT_DIR: shared,
       }),
       true,
     );
     assert.equal(
       omoAgentDirCollidesWithOmp({
-        TOKENTRACKER_OMO_AGENT_DIR: shared,
-        TOKENTRACKER_OMP_AGENT_DIR: other,
+        TOKEN_PULSE_OMO_AGENT_DIR: shared,
+        TOKEN_PULSE_OMP_AGENT_DIR: other,
       }),
       false,
     );

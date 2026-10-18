@@ -78,7 +78,7 @@ test("resolveDroidSessionsDir env precedence", () => {
   const expected = path.join(home, ".factory", "sessions");
   try {
     fs.mkdirSync(expected, { recursive: true });
-    const def = resolveDroidSessionsDir({ HOME: home, TOKENTRACKER_WSL: "native-only" });
+    const def = resolveDroidSessionsDir({ HOME: home, TOKEN_PULSE_WSL: "native-only" });
     assert.equal(def, expected);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });

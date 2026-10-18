@@ -8,14 +8,14 @@ const { resolveUploadConfig } = require('../lib/upload-config');
 
 // Replay the ledger so queue repairs and interrupted uploads never lose counts.
 // The server compares a file snapshot time + byte position before replacing rows.
-async function uploadQueue({ queuePath = path.join(os.homedir(), '.tokentracker', 'tracker', 'queue.jsonl'),
+async function uploadQueue({ queuePath = path.join(os.homedir(), '.token-pulse', 'tracker', 'queue.jsonl'),
   baseUrl, key, request = fetch, env = process.env } = {}) {
   const config = resolveUploadConfig({ queuePath, env });
-  if (config.invalid) throw new Error('Stored upload credentials are invalid; run: tracker connect');
+  if (config.invalid) throw new Error('Stored upload credentials are invalid; run: token-pulse connect');
   const origin = baseUrl ? new URL(baseUrl).origin : config.apiUrl;
   const accessKey = key || config.accessKey;
-  if (!origin) throw new Error('Set TOKENTRACKER_API_URL or run: tracker connect --api-url <url> --key <key>');
-  if (!accessKey) throw new Error('Set TOKENTRACKER_ACCESS_KEY or run: tracker connect --api-url <url> --key <key>');
+  if (!origin) throw new Error('Set TOKEN_PULSE_API_URL or run: token-pulse connect --api-url <url> --key <key>');
+  if (!accessKey) throw new Error('Set TOKEN_PULSE_ACCESS_KEY or run: token-pulse connect --api-url <url> --key <key>');
   const deviceId = getOrCreateMachineId(queuePath);
   if (!deviceId) throw new Error('Cannot persist local device identity');
   const stat = await fs.stat(queuePath).catch(() => ({ size: 0, mtime: new Date(0) }));

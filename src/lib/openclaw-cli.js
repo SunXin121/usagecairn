@@ -55,11 +55,11 @@ function resolveOpenclawCommand(env, platform = process.platform) {
 }
 
 function runOpenclawCli(args, env = process.env) {
-  if (env?.TOKENTRACKER_SKIP_OPENCLAW_CLI === "1") {
+  if (env?.TOKEN_PULSE_SKIP_OPENCLAW_CLI === "1") {
     return {
       code: 1,
       skippedReason: "openclaw-cli-missing",
-      error: "skipped via TOKENTRACKER_SKIP_OPENCLAW_CLI",
+      error: "skipped via TOKEN_PULSE_SKIP_OPENCLAW_CLI",
       stdout: "",
       stderr: "",
     };

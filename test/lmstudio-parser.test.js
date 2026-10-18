@@ -7,7 +7,7 @@ const os = require("node:os");
 const path = require("node:path");
 const cp = require("node:child_process");
 
-const TRACKER = path.resolve(__dirname, "..", "bin", "tracker.js");
+const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
 
 const {
   resolveLmstudioHome,
@@ -50,9 +50,9 @@ test("LM Studio resolves its native home and recursively finds server logs", asy
     fs.mkdirSync(nested, { recursive: true });
     fs.writeFileSync(path.join(nested, "one.log"), "");
     fs.writeFileSync(path.join(nested, "ignore.txt"), "");
-    assert.equal(resolveLmstudioHome({ TOKENTRACKER_LMSTUDIO_HOME: home }), path.resolve(home));
+    assert.equal(resolveLmstudioHome({ TOKEN_PULSE_LMSTUDIO_HOME: home }), path.resolve(home));
     assert.deepEqual(
-      await resolveLmstudioLogFiles({ TOKENTRACKER_LMSTUDIO_HOME: home }),
+      await resolveLmstudioLogFiles({ TOKEN_PULSE_LMSTUDIO_HOME: home }),
       [path.join(nested, "one.log")],
     );
   } finally {
@@ -320,9 +320,9 @@ test("sync and status commands expose the LM Studio integration", () => {
       HOME: dir,
       USERPROFILE: dir,
       APPDATA: path.join(dir, "AppData", "Roaming"),
-      TOKENTRACKER_LMSTUDIO_HOME: lmstudioHome,
-      TOKENTRACKER_NO_TELEMETRY: "1",
-      TOKENTRACKER_WSL_MODE: "native-only",
+      TOKEN_PULSE_LMSTUDIO_HOME: lmstudioHome,
+      TOKEN_PULSE_NO_TELEMETRY: "1",
+      TOKEN_PULSE_WSL_MODE: "native-only",
     };
 
     const sync = cp.spawnSync(
@@ -331,14 +331,14 @@ test("sync and status commands expose the LM Studio integration", () => {
       { env, encoding: "utf8", timeout: 30_000 },
     );
     assert.equal(sync.status, 0, `sync failed: ${sync.stderr || sync.stdout}`);
-    const queuePath = path.join(dir, ".tokentracker", "tracker", "queue.jsonl");
+    const queuePath = path.join(dir, ".token-pulse", "tracker", "queue.jsonl");
     const rows = readQueue(queuePath);
     assert.equal(rows.length, 1);
     assert.equal(rows[0].source, "lmstudio");
     assert.equal(rows[0].model, "local-command");
     assert.equal(rows[0].total_tokens, 48);
 
-    const cursorPath = path.join(dir, ".tokentracker", "tracker", "cursors.json");
+    const cursorPath = path.join(dir, ".token-pulse", "tracker", "cursors.json");
     const cursorAfterFirstSync = JSON.parse(fs.readFileSync(cursorPath, "utf8")).lmstudio;
     const secondSync = cp.spawnSync(
       process.execPath,

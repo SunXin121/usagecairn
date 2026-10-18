@@ -18,7 +18,7 @@ const test = require("node:test");
 const { parseTraeCnApiIncremental } = require("../src/lib/rollout");
 
 function tempQueue() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tokentracker-trae-cn-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "token-pulse-trae-cn-"));
   return {
     dir,
     queuePath: path.join(dir, "queue.jsonl"),

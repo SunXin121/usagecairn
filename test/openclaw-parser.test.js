@@ -52,7 +52,7 @@ function openclawCursor(cursors, filePath) {
 }
 
 test("parseOpenclawIncremental counts only the new event after an atomic session rewrite", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -97,7 +97,7 @@ test("parseOpenclawIncremental counts only the new event after an atomic session
 });
 
 test("parseOpenclawIncremental skips a missing file without discarding present files", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const missingPath = path.join(tmp, "missing.jsonl");
     const sessionPath = path.join(tmp, "session.jsonl");
@@ -135,7 +135,7 @@ test("parseOpenclawIncremental skips a missing file without discarding present f
 });
 
 test("parseOpenclawIncremental keeps the append-only fast path", async (t) => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   const realCreateReadStream = fssync.createReadStream.bind(fssync);
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
@@ -198,7 +198,7 @@ test("parseOpenclawIncremental keeps the append-only fast path", async (t) => {
 });
 
 test("parseOpenclawIncremental commits cursors only after queue append succeeds", async (t) => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   const realAppendFile = fs.appendFile.bind(fs);
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
@@ -281,7 +281,7 @@ test("parseOpenclawIncremental commits cursors only after queue append succeeds"
 });
 
 test("parseOpenclawIncremental preserves repeated identical metadata events with multiset dedup", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -317,7 +317,7 @@ test("parseOpenclawIncremental preserves repeated identical metadata events with
 });
 
 test("parseOpenclawIncremental deduplicates stable IDs after same-inode compaction", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -386,7 +386,7 @@ test("parseOpenclawIncremental deduplicates stable IDs after same-inode compacti
 });
 
 test("parseOpenclawIncremental handles atomic rewrites when the persisted inode is zero", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -426,7 +426,7 @@ test("parseOpenclawIncremental handles atomic rewrites when the persisted inode 
 });
 
 test("parseOpenclawIncremental fingerprints same-inode same-size and larger rewrites", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -502,7 +502,7 @@ test("parseOpenclawIncremental fingerprints same-inode same-size and larger rewr
 });
 
 test("parseOpenclawIncremental ignores prompt-only rewrites when verifying the usage prefix", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -548,7 +548,7 @@ test("parseOpenclawIncremental ignores prompt-only rewrites when verifying the u
 });
 
 test("parseOpenclawIncremental retries an atomic replacement that lands during parsing", async (t) => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   const realCreateReadStream = fssync.createReadStream.bind(fssync);
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
@@ -597,7 +597,7 @@ test("parseOpenclawIncremental retries an atomic replacement that lands during p
 });
 
 test("parseOpenclawIncremental counts duplicate stable IDs once per scan", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -625,7 +625,7 @@ test("parseOpenclawIncremental counts duplicate stable IDs once per scan", async
 });
 
 test("parseOpenclawIncremental does not consume stable IDs from invalid usage records", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -695,7 +695,7 @@ test("parseOpenclawIncremental does not consume stable IDs from invalid usage re
 });
 
 test("parseOpenclawIncremental rejects malformed token fields before consuming stable IDs", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -773,7 +773,7 @@ test("parseOpenclawIncremental rejects malformed token fields before consuming s
 });
 
 test("parseOpenclawIncremental rejects coercible non-number token fields", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -855,7 +855,7 @@ test("OpenClaw cursor keys normalize Windows separators and casing", () => {
 });
 
 test("parseOpenclawIncremental resumes append-only files that previously had no usage", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -896,7 +896,7 @@ test("parseOpenclawIncremental resumes append-only files that previously had no 
 });
 
 test("parseOpenclawIncremental adopts a legacy offset cursor without replaying history", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -965,7 +965,7 @@ test("parseOpenclawIncremental adopts a legacy offset cursor without replaying h
 });
 
 test("parseOpenclawIncremental seeds legacy stable IDs before parsing the tail", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1029,7 +1029,7 @@ test("parseOpenclawIncremental seeds legacy stable IDs before parsing the tail",
 });
 
 test("parseOpenclawIncremental preserves legacy metadata multiset occurrences in a full scan", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1079,7 +1079,7 @@ test("parseOpenclawIncremental preserves legacy metadata multiset occurrences in
 });
 
 test("parseOpenclawIncremental resumes a completed legacy partial line on the same inode", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1140,7 +1140,7 @@ test("parseOpenclawIncremental resumes a completed legacy partial line on the sa
 });
 
 test("parseOpenclawIncremental does not replay a counted legacy line that lacked a newline", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1211,7 +1211,7 @@ test("parseOpenclawIncremental does not replay a counted legacy line that lacked
 });
 
 test("parseOpenclawIncremental baselines a changed-inode legacy rewrite whose offset is mid-line", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1299,7 +1299,7 @@ test("parseOpenclawIncremental baselines a changed-inode legacy rewrite whose of
 });
 
 test("parseOpenclawIncremental baselines a changed-inode legacy rewrite at a line boundary", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1381,7 +1381,7 @@ test("parseOpenclawIncremental baselines a changed-inode legacy rewrite at a lin
 });
 
 test("parseOpenclawIncremental counts only post-cutoff usage for a changed-inode legacy cursor", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1456,7 +1456,7 @@ test("parseOpenclawIncremental counts only post-cutoff usage for a changed-inode
 });
 
 test("parseOpenclawIncremental counts a post-cutoff event moved before a legacy offset", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1524,7 +1524,7 @@ test("parseOpenclawIncremental counts a post-cutoff event moved before a legacy 
 });
 
 test("parseOpenclawIncremental baselines a zero-inode legacy cursor at a line boundary", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1599,7 +1599,7 @@ test("parseOpenclawIncremental baselines a zero-inode legacy cursor at a line bo
 });
 
 test("parseOpenclawIncremental counts only post-cutoff usage for a zero-inode legacy cursor", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");
@@ -1667,7 +1667,7 @@ test("parseOpenclawIncremental counts only post-cutoff usage for a zero-inode le
 });
 
 test("parseOpenclawIncremental migrates a legacy fingerprint with one full scan", async (t) => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   const realCreateReadStream = fssync.createReadStream.bind(fssync);
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
@@ -1738,7 +1738,7 @@ test("parseOpenclawIncremental migrates a legacy fingerprint with one full scan"
 });
 
 test("parseOpenclawIncremental counts a concurrent post-cutoff event during legacy migration", async (t) => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   const realCreateReadStream = fssync.createReadStream.bind(fssync);
   try {
     const sessionPath = path.join(tmp, "session.jsonl");
@@ -1821,7 +1821,7 @@ test("parseOpenclawIncremental counts a concurrent post-cutoff event during lega
 });
 
 test("OpenClaw cursor ownership does not claim Codex rollout files", async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-openclaw-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-openclaw-"));
   try {
     const rolloutPath = path.join(tmp, "rollout-test.jsonl");
     const queuePath = path.join(tmp, "queue.jsonl");

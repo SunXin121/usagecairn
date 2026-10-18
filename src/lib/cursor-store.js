@@ -20,7 +20,7 @@ const OPENCODE_MESSAGES_DIRNAME = "opencode-messages";
 const OPENCODE_FINGERPRINTS_DIRNAME = "opencode-fingerprints";
 const DEFAULT_ACTIVATION_BYTES = 16 * 1024 * 1024;
 const PROJECT_ABSENT_CONTEXT_RESCAN_MS = 24 * 60 * 60 * 1000;
-const CURSOR_STORE_RETRY_CODE = "TOKENTRACKER_CURSOR_STORE_RETRY";
+const CURSOR_STORE_RETRY_CODE = "TOKEN_PULSE_CURSOR_STORE_RETRY";
 
 async function openCursorStore({
   trackerDir,
@@ -321,7 +321,7 @@ class V2CursorStore {
       return await this.loadFileShardUnchecked(shardKey, cursors);
     } catch (error) {
       if (
-        error?.code !== "TOKENTRACKER_CURSOR_STORE_CORRUPT" ||
+        error?.code !== "TOKEN_PULSE_CURSOR_STORE_CORRUPT" ||
         !this.activateFallbackGeneration(cursors)
       ) {
         throw error;
@@ -500,7 +500,7 @@ class V2CursorStore {
       return await this.loadOpencodeMessageShardUnchecked(shardKey);
     } catch (error) {
       if (
-        error?.code !== "TOKENTRACKER_CURSOR_STORE_CORRUPT" ||
+        error?.code !== "TOKEN_PULSE_CURSOR_STORE_CORRUPT" ||
         !this.activateFallbackGeneration(this.cursors)
       ) {
         throw error;
@@ -529,7 +529,7 @@ class V2CursorStore {
       return await this.loadOpencodeFingerprintShardUnchecked(shardKey, namespace);
     } catch (error) {
       if (
-        error?.code !== "TOKENTRACKER_CURSOR_STORE_CORRUPT" ||
+        error?.code !== "TOKEN_PULSE_CURSOR_STORE_CORRUPT" ||
         !this.activateFallbackGeneration(this.cursors)
       ) {
         throw error;
@@ -683,7 +683,7 @@ class V2CursorStore {
       return this.loadEventSetUnchecked(shardKey);
     } catch (error) {
       if (
-        error?.code !== "TOKENTRACKER_CURSOR_STORE_CORRUPT" ||
+        error?.code !== "TOKEN_PULSE_CURSOR_STORE_CORRUPT" ||
         !this.activateFallbackGeneration(cursors)
       ) {
         throw error;
@@ -1882,7 +1882,7 @@ function replaceObjectContents(target, source) {
 
 function cursorStoreCorruption(message, cause = null) {
   const error = new Error(message, cause ? { cause } : undefined);
-  error.code = "TOKENTRACKER_CURSOR_STORE_CORRUPT";
+  error.code = "TOKEN_PULSE_CURSOR_STORE_CORRUPT";
   return error;
 }
 

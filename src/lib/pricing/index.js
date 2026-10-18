@@ -67,7 +67,7 @@ const state = {
 };
 
 function defaultCachePath() {
-  return path.join(os.homedir(), ".tokentracker", "cache", "pricing.json");
+  return path.join(os.homedir(), ".token-pulse", "cache", "pricing.json");
 }
 
 async function ensurePricingLoaded(opts = {}) {

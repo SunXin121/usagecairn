@@ -15,7 +15,7 @@ const {
 } = require("../src/lib/rollout");
 
 function tempQueue() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "tokentracker-qoder-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "token-pulse-qoder-"));
   return {
     dir,
     queuePath: path.join(dir, "queue.jsonl"),
@@ -210,7 +210,7 @@ test("resolveQoderDbPath supports the macOS default and explicit override", () =
 test("resolveQoderDbPaths discovers native and WSL Qoder databases on Windows", () => {
   const paths = resolveQoderDbPaths({
     home: "C:\\Users\\test",
-    env: { APPDATA: "C:\\Users\\test\\AppData\\Roaming", TOKENTRACKER_WSL_MODE: "both" },
+    env: { APPDATA: "C:\\Users\\test\\AppData\\Roaming", TOKEN_PULSE_WSL_MODE: "both" },
     platform: "win32",
     deps: {
       existsSync() {

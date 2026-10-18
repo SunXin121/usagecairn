@@ -79,8 +79,8 @@ test("resolveMuseSessionFiles finds main and subagent logs and skips derived vie
     assert.deepEqual(resolveMuseSessionFiles(env).sort(), [main, sub].sort());
   }));
 
-test("resolveMuseHome honours TOKENTRACKER_MUSE_HOME", () => {
-  assert.equal(resolveMuseHome({ TOKENTRACKER_MUSE_HOME: "/tmp/custom-muse" }), "/tmp/custom-muse");
+test("resolveMuseHome honours TOKEN_PULSE_MUSE_HOME", () => {
+  assert.equal(resolveMuseHome({ TOKEN_PULSE_MUSE_HOME: "/tmp/custom-muse" }), "/tmp/custom-muse");
 });
 
 test("parseMuseIncremental splits cached input out and keeps reasoning a subset of output", () =>
@@ -360,7 +360,7 @@ test("parseMuseIncremental keeps known run models after a rewrite drops the conf
 test("parseMuseIncremental does not treat a Muse home path containing subagent as a subagent session", () =>
   withHome(async (home) => {
     const museHome = path.join(home, "data", "subagent", "muse");
-    const env = { HOME: home, TOKENTRACKER_MUSE_HOME: museHome, XDG_CONFIG_HOME: path.join(home, ".config") };
+    const env = { HOME: home, TOKEN_PULSE_MUSE_HOME: museHome, XDG_CONFIG_HOME: path.join(home, ".config") };
     const dir = path.join(museHome, "sessions", "2026/10/13/s1");
     fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, "session.jsonl");

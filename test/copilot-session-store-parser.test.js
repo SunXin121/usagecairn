@@ -139,15 +139,15 @@ async function withSyncHome(home, fn) {
   const keys = [
     "HOME",
     "USERPROFILE",
-    "TOKENTRACKER_DEVICE_TOKEN",
-    "TOKENTRACKER_INSFORGE_BASE_URL",
+    "TOKEN_PULSE_DEVICE_TOKEN",
+    "TOKEN_PULSE_INSFORGE_BASE_URL",
     "COPILOT_HOME",
-    "TOKENTRACKER_WSL_MODE",
+    "TOKEN_PULSE_WSL_MODE",
     "COPILOT_OTEL_ENABLED",
     "COPILOT_OTEL_EXPORTER_TYPE",
     "COPILOT_OTEL_FILE_EXPORTER_PATH",
-    "TOKENTRACKER_COPILOT_APP_DB",
-    "TOKENTRACKER_COPILOT_SESSION_STORE_DB",
+    "TOKEN_PULSE_COPILOT_APP_DB",
+    "TOKEN_PULSE_COPILOT_SESSION_STORE_DB",
   ];
   const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   try {
@@ -1234,7 +1234,7 @@ test("cmdSync canonical mode skips unmatchable CLI OTEL and keeps Chat records",
   try {
     await withSyncHome(dir, async () => {
       const args = ["--auto", "--from-retry", "--source=copilot"];
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const queuePath = path.join(trackerDir, "queue.jsonl");
       await cmdSync(args);
 
@@ -1796,7 +1796,7 @@ test("resolveCopilotSessionStorePaths keeps Windows native discovery enabled", (
   });
   const paths = resolveCopilotSessionStorePaths({
     HOME: "C:\\Users\\dev",
-    TOKENTRACKER_WSL_MODE: "native-only",
+    TOKEN_PULSE_WSL_MODE: "native-only",
   });
   assert.equal(paths.length, 1);
   assert.match(paths[0], /\.copilot[\\/]session-store\.db$/);
@@ -1810,7 +1810,7 @@ test("Windows native Copilot paths prefer USERPROFILE over shell HOME", (t) => {
   const env = {
     HOME: "D:\\GitBash\\home",
     USERPROFILE: "C:\\Users\\dev",
-    TOKENTRACKER_WSL_MODE: "native-only",
+    TOKEN_PULSE_WSL_MODE: "native-only",
   };
   const storePaths = resolveCopilotSessionStorePaths(env);
   const appPaths = resolveCopilotAppDbPaths(env);
@@ -1825,7 +1825,7 @@ test("automatic Copilot discovery stays native when WSL is preferred", (t) => {
   const env = {
     HOME: "D:\\GitBash\\home",
     USERPROFILE: "C:\\Users\\dev",
-    TOKENTRACKER_WSL_MODE: "wsl-first",
+    TOKEN_PULSE_WSL_MODE: "wsl-first",
   };
   const storePaths = resolveCopilotSessionStorePaths(env);
   const appPaths = resolveCopilotAppDbPaths(env);
@@ -1853,9 +1853,9 @@ test("cmdSync scans physical App DB aliases only once before adoption", async ()
   fs.linkSync(appDb, aliasPath);
   try {
     await withSyncHome(dir, async () => {
-      process.env.TOKENTRACKER_COPILOT_APP_DB = aliasPath;
+      process.env.TOKEN_PULSE_COPILOT_APP_DB = aliasPath;
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const rows = readQueue(path.join(trackerDir, "queue.jsonl"));
       assert.equal(rows.length, 1);
       assert.equal(rows[0].total_tokens, 22);
@@ -1889,8 +1889,8 @@ test("cmdSync coalesces App DB aliases already present in legacy cursors", async
   fs.linkSync(appDb, aliasPath);
   try {
     await withSyncHome(dir, async () => {
-      process.env.TOKENTRACKER_COPILOT_APP_DB = aliasPath;
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      process.env.TOKEN_PULSE_COPILOT_APP_DB = aliasPath;
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       fs.mkdirSync(trackerDir, { recursive: true });
       const baseline = {
         sessionTotals: {
@@ -1993,7 +1993,7 @@ test("cmdSync catches up App once, adopts store, then writes only store deltas",
     await withSyncHome(dir, async () => {
       const args = ["--auto", "--from-retry", "--source=copilot"];
       await cmdSync(args);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const queuePath = path.join(trackerDir, "queue.jsonl");
       const cursorsPath = path.join(trackerDir, "cursors.json");
       const firstRows = readQueue(queuePath).filter((row) => row.source === "copilot");
@@ -2075,7 +2075,7 @@ test("cmdSync does not adopt store when the legacy App catch-up fails", async ()
     await withSyncHome(dir, async () => {
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
       const cursors = JSON.parse(
-        fs.readFileSync(path.join(dir, ".tokentracker", "tracker", "cursors.json"), "utf8"),
+        fs.readFileSync(path.join(dir, ".token-pulse", "tracker", "cursors.json"), "utf8"),
       );
       assert.notEqual(cursors.copilotStore?.active, true);
       assert.equal(cursors.copilotStore, undefined);
@@ -2100,7 +2100,7 @@ test("cmdSync backfills store history when no legacy App or OTEL source exists",
   try {
     await withSyncHome(dir, async () => {
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const rows = readQueue(path.join(trackerDir, "queue.jsonl"));
       assert.equal(rows.length, 1);
       assert.equal(rows[0].input_tokens, 2);
@@ -2140,7 +2140,7 @@ test("a current Chat-only OTEL file does not suppress CLI store backfill", async
     await withSyncHome(dir, async () => {
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
       const rows = readQueue(
-        path.join(dir, ".tokentracker", "tracker", "queue.jsonl"),
+        path.join(dir, ".token-pulse", "tracker", "queue.jsonl"),
       );
       assert.deepEqual(
         rows.map((row) => row.model).sort(),
@@ -2184,7 +2184,7 @@ test("first adoption deduplicates a current CLI OTEL file against store history"
     );
     await withSyncHome(dir, async () => {
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const rows = readQueue(path.join(trackerDir, "queue.jsonl"));
       assert.equal(rows.length, 1);
       assert.equal(rows[0].total_tokens, 120);
@@ -2229,7 +2229,7 @@ test("first adoption does not replay store rows for unmatchable CLI OTEL", async
       process.env.COPILOT_OTEL_EXPORTER_TYPE = "file";
       process.env.COPILOT_OTEL_FILE_EXPORTER_PATH = otelPath;
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const rows = readQueue(path.join(trackerDir, "queue.jsonl"));
       assert.equal(rows.length, 1);
       assert.equal(rows[0].total_tokens, 120);
@@ -2285,7 +2285,7 @@ test("App-owned adoption still consumes the matching CLI OTEL fingerprint", asyn
     );
     await withSyncHome(dir, async () => {
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const rows = readQueue(path.join(trackerDir, "queue.jsonl"));
       assert.equal(rows.at(-1).total_tokens, 170);
       const cursors = JSON.parse(
@@ -2336,7 +2336,7 @@ test("first adoption preserves mixed-session CLI history as a legacy residual", 
       const args = ["--auto", "--from-retry", "--source=copilot"];
       const queuePath = path.join(
         dir,
-        ".tokentracker",
+        ".token-pulse",
         "tracker",
         "queue.jsonl",
       );
@@ -2352,7 +2352,7 @@ test("first adoption preserves mixed-session CLI history as a legacy residual", 
       assert.equal(residual.conversation_count, 0);
       const cursors = JSON.parse(
         fs.readFileSync(
-          path.join(dir, ".tokentracker", "tracker", "cursors.json"),
+          path.join(dir, ".token-pulse", "tracker", "cursors.json"),
           "utf8",
         ),
       );
@@ -2401,7 +2401,7 @@ test("Chat-only OTEL history does not block a mixed-session legacy residual", as
   });
   try {
     await withSyncHome(dir, async () => {
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const queuePath = path.join(trackerDir, "queue.jsonl");
       const cursorsPath = path.join(trackerDir, "cursors.json");
       fs.mkdirSync(trackerDir, { recursive: true });
@@ -2455,7 +2455,7 @@ test("legacy CLI OTEL history still prevents an unsafe store replay", async () =
   ]);
   try {
     await withSyncHome(dir, async () => {
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const queuePath = path.join(trackerDir, "queue.jsonl");
       const cursorsPath = path.join(trackerDir, "cursors.json");
       fs.mkdirSync(trackerDir, { recursive: true });
@@ -2525,7 +2525,7 @@ test("cmdSync backfills an imported CLI session whose App baseline is still zero
   try {
     await withSyncHome(dir, async () => {
       await cmdSync(["--auto", "--from-retry", "--source=copilot"]);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const rows = readQueue(path.join(trackerDir, "queue.jsonl"));
       assert.equal(rows.length, 1);
       assert.equal(rows[0].total_tokens, 28);
@@ -2569,10 +2569,10 @@ test("explicit store override owns App usage outside the App DB directory", asyn
   });
   try {
     await withSyncHome(home, async () => {
-      process.env.TOKENTRACKER_COPILOT_SESSION_STORE_DB =
+      process.env.TOKEN_PULSE_COPILOT_SESSION_STORE_DB =
         "~/custom-copilot/session-store.db";
       const args = ["--auto", "--from-retry", "--source=copilot"];
-      const queuePath = path.join(home, ".tokentracker", "tracker", "queue.jsonl");
+      const queuePath = path.join(home, ".token-pulse", "tracker", "queue.jsonl");
       await cmdSync(args);
 
       insertUsage(customStorePath, {
@@ -2626,7 +2626,7 @@ test("cmdSync keeps App observe-only while an adopted store is unavailable", asy
     await withSyncHome(dir, async () => {
       const args = ["--auto", "--from-retry", "--source=copilot"];
       await cmdSync(args);
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const queuePath = path.join(trackerDir, "queue.jsonl");
       const cursorsPath = path.join(trackerDir, "cursors.json");
       const beforeQueue = fs.readFileSync(queuePath, "utf8");
@@ -2739,7 +2739,7 @@ test("a newly discovered App DB stays observe-only after global adoption", async
       const args = ["--auto", "--from-retry", "--source=copilot"];
       const queuePath = path.join(
         primary.dir,
-        ".tokentracker",
+        ".token-pulse",
         "tracker",
         "queue.jsonl",
       );
@@ -2753,7 +2753,7 @@ test("a newly discovered App DB stays observe-only after global adoption", async
         fs.readFileSync(
           path.join(
             primary.dir,
-            ".tokentracker",
+            ".token-pulse",
             "tracker",
             "cursors.json",
           ),
@@ -2801,7 +2801,7 @@ test("cmdSync prunes a permanently missing App DB cursor once store is active", 
       const args = ["--auto", "--from-retry", "--source=copilot"];
       const cursorsPath = path.join(
         dir,
-        ".tokentracker",
+        ".token-pulse",
         "tracker",
         "cursors.json",
       );
@@ -2849,7 +2849,7 @@ test("cmdSync retains App cursor when App and store are both temporarily missing
       const args = ["--auto", "--from-retry", "--source=copilot"];
       const cursorsPath = path.join(
         dir,
-        ".tokentracker",
+        ".token-pulse",
         "tracker",
         "cursors.json",
       );
@@ -2897,7 +2897,7 @@ test("cmdSync retains App cursor while its store exists but is unreadable", asyn
       const args = ["--auto", "--from-retry", "--source=copilot"];
       const cursorsPath = path.join(
         dir,
-        ".tokentracker",
+        ".token-pulse",
         "tracker",
         "cursors.json",
       );
@@ -2946,7 +2946,7 @@ test("cmdSync reconciles new requests when an adopted store is recreated", async
     await withSyncHome(dir, async () => {
       const args = ["--auto", "--from-retry", "--source=copilot"];
       await cmdSync(args);
-      const queuePath = path.join(dir, ".tokentracker", "tracker", "queue.jsonl");
+      const queuePath = path.join(dir, ".token-pulse", "tracker", "queue.jsonl");
 
       fs.rmSync(storeDb, { force: true });
       createStoreSchema(storeDb);
@@ -2969,7 +2969,7 @@ test("cmdSync reconciles new requests when an adopted store is recreated", async
       assert.equal(rows.reduce((sum, row) => sum + row.total_tokens, 0), 22 + 33);
       let cursors = JSON.parse(
         fs.readFileSync(
-          path.join(dir, ".tokentracker", "tracker", "cursors.json"),
+          path.join(dir, ".token-pulse", "tracker", "cursors.json"),
           "utf8",
         ),
       );
@@ -2994,7 +2994,7 @@ test("cmdSync reconciles new requests when an adopted store is recreated", async
       assert.equal(rows.filter((row) => row.model === "gpt-5.6-terra").length, 1);
       cursors = JSON.parse(
         fs.readFileSync(
-          path.join(dir, ".tokentracker", "tracker", "cursors.json"),
+          path.join(dir, ".token-pulse", "tracker", "cursors.json"),
           "utf8",
         ),
       );
@@ -3034,7 +3034,7 @@ test("a corrupt App DB does not block canonical reset reconciliation", async () 
   try {
     await withSyncHome(dir, async () => {
       const args = ["--auto", "--from-retry", "--source=copilot"];
-      const trackerDir = path.join(dir, ".tokentracker", "tracker");
+      const trackerDir = path.join(dir, ".token-pulse", "tracker");
       const queuePath = path.join(trackerDir, "queue.jsonl");
       const cursorsPath = path.join(trackerDir, "cursors.json");
       await cmdSync(args);
@@ -3113,11 +3113,11 @@ test("Windows reset reconciliation preserves the store path's original casing", 
   });
   try {
     await withSyncHome(home, async () => {
-      process.env.TOKENTRACKER_WSL_MODE = "native-only";
+      process.env.TOKEN_PULSE_WSL_MODE = "native-only";
       const args = ["--auto", "--from-retry", "--source=copilot"];
       const cursorsPath = path.join(
         home,
-        ".tokentracker",
+        ".token-pulse",
         "tracker",
         "cursors.json",
       );
@@ -3144,7 +3144,7 @@ test("Windows reset reconciliation preserves the store path's original casing", 
       const cursors = JSON.parse(fs.readFileSync(cursorsPath, "utf8"));
       assert.equal(cursors.copilotStore.dbs[storeDb].lastId, 1);
       const rows = readQueue(
-        path.join(home, ".tokentracker", "tracker", "queue.jsonl"),
+        path.join(home, ".token-pulse", "tracker", "queue.jsonl"),
       );
       assert.equal(rows.reduce((sum, row) => sum + row.total_tokens, 0), 22 + 33);
     });

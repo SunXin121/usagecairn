@@ -190,12 +190,12 @@ function makeGitRepo(dir, remoteUrl = "https://github.com/acme/widgets.git") {
 
 test("Devin resolver honors the explicit database override on every platform", (t) => {
   assert.equal(
-    resolveDevinDbPath({ TOKENTRACKER_DEVIN_DB: " /tmp/custom-devin.db " }),
+    resolveDevinDbPath({ TOKEN_PULSE_DEVIN_DB: " /tmp/custom-devin.db " }),
     path.resolve("/tmp/custom-devin.db"),
   );
   mockPlatform(t, "win32");
   assert.equal(
-    resolveDevinDbPath({ TOKENTRACKER_DEVIN_DB: "D:\\dev\\sessions.db" }),
+    resolveDevinDbPath({ TOKEN_PULSE_DEVIN_DB: "D:\\dev\\sessions.db" }),
     path.resolve("D:\\dev\\sessions.db"),
   );
 });
@@ -247,7 +247,7 @@ test("Devin resolver on win32 discovers only a WSL install", (t) => {
   wslCalls.length = 0;
   assert.equal(
     resolveDevinDbPath(
-      { ...env, TOKENTRACKER_WSL_MODE: "native-only" },
+      { ...env, TOKEN_PULSE_WSL_MODE: "native-only" },
       { runWsl, existsSync },
     ),
     null,

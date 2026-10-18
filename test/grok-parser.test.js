@@ -98,7 +98,7 @@ function makeSession({
     sessionId,
     cwd,
     encodedCwd,
-    env: { TOKENTRACKER_GROK_HOME: root, GROK_HOME: root },
+    env: { TOKEN_PULSE_GROK_HOME: root, GROK_HOME: root },
   };
 }
 

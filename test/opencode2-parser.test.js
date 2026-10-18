@@ -142,7 +142,7 @@ function v1AssistantMessage({ id, sessionID, modelID = "claude-sonnet-4", provid
 }
 
 async function withTmp(fn) {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tokentracker-opencode2-"));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "token-pulse-opencode2-"));
   try {
     return await fn(tmp);
   } finally {

@@ -27,7 +27,7 @@ const {
 } = require("../src/lib/rollout");
 const { computeRowCost } = require("../src/lib/pricing");
 
-const TRACKER = path.resolve(__dirname, "..", "bin", "tracker.js");
+const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
 
 function executeSql(dbPath, sql) {
   if (typeof DatabaseSync === "function") {
@@ -86,7 +86,7 @@ function readQueue(queuePath) {
 
 test("Unsloth resolves its official Studio database and overrides", () => {
   assert.equal(
-    resolveUnslothDbPath({ TOKENTRACKER_UNSLOTH_DB: " /tmp/custom.db " }),
+    resolveUnslothDbPath({ TOKEN_PULSE_UNSLOTH_DB: " /tmp/custom.db " }),
     path.resolve("/tmp/custom.db"),
   );
   assert.equal(
@@ -343,9 +343,9 @@ sqliteTest("sync and status commands expose the Unsloth Studio integration", () 
       HOME: dir,
       USERPROFILE: dir,
       APPDATA: path.join(dir, "AppData", "Roaming"),
-      TOKENTRACKER_UNSLOTH_DB: dbPath,
-      TOKENTRACKER_NO_TELEMETRY: "1",
-      TOKENTRACKER_WSL_MODE: "native-only",
+      TOKEN_PULSE_UNSLOTH_DB: dbPath,
+      TOKEN_PULSE_NO_TELEMETRY: "1",
+      TOKEN_PULSE_WSL_MODE: "native-only",
     };
 
     const sync = cp.spawnSync(
@@ -354,7 +354,7 @@ sqliteTest("sync and status commands expose the Unsloth Studio integration", () 
       { env, encoding: "utf8", timeout: 30_000 },
     );
     assert.equal(sync.status, 0, `sync failed: ${sync.stderr || sync.stdout}`);
-    const queuePath = path.join(dir, ".tokentracker", "tracker", "queue.jsonl");
+    const queuePath = path.join(dir, ".token-pulse", "tracker", "queue.jsonl");
     const rows = readQueue(queuePath);
     assert.equal(rows.length, 1);
     assert.equal(rows[0].source, "unsloth");
@@ -362,7 +362,7 @@ sqliteTest("sync and status commands expose the Unsloth Studio integration", () 
     assert.equal(rows[0].total_tokens, 48);
     assert.ok(computeRowCost(rows[0]) > 0);
 
-    const cursorPath = path.join(dir, ".tokentracker", "tracker", "cursors.json");
+    const cursorPath = path.join(dir, ".token-pulse", "tracker", "cursors.json");
     const cursorAfterFirstSync = JSON.parse(fs.readFileSync(cursorPath, "utf8")).unsloth;
     const secondSync = cp.spawnSync(
       process.execPath,

@@ -36,8 +36,8 @@ function readExact(fd, target, offset) {
 }
 
 function pageDecryptor(firstPage, env) {
-  const hex = String(env.TOKENTRACKER_TRAE_SQLCIPHER_KEY || "").trim() || DEFAULT_SQLCIPHER_KEY;
-  if (!/^[0-9a-f]{64}$/i.test(hex)) throw error("TOKENTRACKER_TRAE_SQLCIPHER_KEY must contain 64 hex characters.");
+  const hex = String(env.TOKEN_PULSE_TRAE_SQLCIPHER_KEY || "").trim() || DEFAULT_SQLCIPHER_KEY;
+  if (!/^[0-9a-f]{64}$/i.test(hex)) throw error("TOKEN_PULSE_TRAE_SQLCIPHER_KEY must contain 64 hex characters.");
   const key = Buffer.from(hex, "hex");
   const salt = Buffer.from(firstPage.subarray(0, 16).map((byte) => byte ^ 0x3a));
   // SQLCipher 4 raw-key format: AES-256-CBC, 4096-byte pages, SHA-512 HMAC.
@@ -53,7 +53,7 @@ function pageDecryptor(firstPage, env) {
       const expected = crypto.createHmac("sha512", hmacKey)
         .update(page.subarray(start, ivOffset + 16)).update(pageId).digest();
       if (!crypto.timingSafeEqual(expected, page.subarray(ivOffset + 16))) {
-        throw error("SQLCipher authentication failed (incorrect key, unsupported format, or damaged database); set TOKENTRACKER_TRAE_SQLCIPHER_KEY to override the shared application key.");
+        throw error("SQLCipher authentication failed (incorrect key, unsupported format, or damaged database); set TOKEN_PULSE_TRAE_SQLCIPHER_KEY to override the shared application key.");
       }
       const decipher = crypto.createDecipheriv("aes-256-cbc", key, page.subarray(ivOffset, ivOffset + 16));
       decipher.setAutoPadding(false);

@@ -4,7 +4,7 @@ const fs = require("node:fs/promises");
 const fssync = require("node:fs");
 const { runOpenclawCli } = require("./openclaw-cli");
 
-const OPENCLAW_HOOK_NAME = "tokentracker-openclaw-sync";
+const OPENCLAW_HOOK_NAME = "token-pulse-openclaw-sync";
 const OPENCLAW_HOOK_DIRNAME = "openclaw-hook";
 
 function resolveOpenclawHookPaths({ home = os.homedir(), trackerDir, env = process.env } = {}) {
@@ -14,7 +14,7 @@ function resolveOpenclawHookPaths({ home = os.homedir(), trackerDir, env = proce
     normalizeString(env.OPENCLAW_CONFIG_PATH) || path.join(home, ".openclaw", "openclaw.json");
 
   const openclawHome =
-    normalizeString(env.TOKENTRACKER_OPENCLAW_HOME) ||
+    normalizeString(env.TOKEN_PULSE_OPENCLAW_HOME) ||
     normalizeString(env.OPENCLAW_STATE_DIR) ||
     path.join(home, ".openclaw");
 
@@ -33,7 +33,7 @@ function resolveOpenclawHookPaths({ home = os.homedir(), trackerDir, env = proce
 async function installOpenclawHook({
   home = os.homedir(),
   trackerDir,
-  packageName = "tokentracker-cli",
+  packageName = "token-pulse",
   env = process.env,
 } = {}) {
   const paths = resolveOpenclawHookPaths({ home, trackerDir, env });
@@ -64,7 +64,7 @@ async function installOpenclawHook({
 async function ensureOpenclawHookFiles({
   hookDir,
   trackerDir,
-  packageName = "tokentracker-cli",
+  packageName = "token-pulse",
   openclawHome,
 } = {}) {
   if (!hookDir || !trackerDir) throw new Error("hookDir and trackerDir are required");
@@ -226,20 +226,20 @@ async function removeOpenclawHookConfig({
 function buildHookMarkdown() {
   return `---
 name: ${OPENCLAW_HOOK_NAME}
-description: "Trigger tokentracker sync when OpenClaw sessions roll over"
+description: "Trigger token-pulse sync when OpenClaw sessions roll over"
 metadata:
   { "openclaw": { "emoji": "📈", "events": ["command:new", "command:reset", "command:stop"], "requires": { "bins": ["node"] } } }
 ---
 
-# TokenTracker OpenClaw Sync Hook
+# TokenPulse OpenClaw Sync Hook
 
-Triggers non-blocking 'tokentracker sync --auto --from-openclaw' runs when OpenClaw command events indicate session rollover/reset/stop.
+Triggers non-blocking 'token-pulse sync --auto --from-openclaw' runs when OpenClaw command events indicate session rollover/reset/stop.
 `;
 }
 
-function buildHookHandler({ trackerDir, packageName = "tokentracker-cli", openclawHome }) {
+function buildHookHandler({ trackerDir, packageName = "token-pulse", openclawHome }) {
   const trackerBinPath = path.join(trackerDir, "app", "bin", "tracker.js");
-  const fallbackPkg = packageName || "tokentracker-cli";
+  const fallbackPkg = packageName || "token-pulse";
   const safeOpenclawHome = openclawHome || path.join(os.homedir(), ".openclaw");
 
   return (
@@ -279,21 +279,21 @@ function buildHookHandler({ trackerDir, packageName = "tokentracker-cli", opencl
     `\n` +
     `    const env = {\n` +
     `      ...process.env,\n` +
-    `      TOKENTRACKER_OPENCLAW_AGENT_ID: agentId,\n` +
-    `      TOKENTRACKER_OPENCLAW_SESSION_KEY: sessionKey,\n` +
-    `      TOKENTRACKER_OPENCLAW_PREV_SESSION_ID: sessionId,\n` +
-    `      TOKENTRACKER_OPENCLAW_HOME: openclawHome\n` +
+    `      TOKEN_PULSE_OPENCLAW_AGENT_ID: agentId,\n` +
+    `      TOKEN_PULSE_OPENCLAW_SESSION_KEY: sessionKey,\n` +
+    `      TOKEN_PULSE_OPENCLAW_PREV_SESSION_ID: sessionId,\n` +
+    `      TOKEN_PULSE_OPENCLAW_HOME: openclawHome\n` +
     `    };\n` +
     `    const prevTotalTokens = toNonNegativeInt(sessionEntry && sessionEntry.totalTokens);\n` +
     `    const prevInputTokens = toNonNegativeInt(sessionEntry && sessionEntry.inputTokens);\n` +
     `    const prevOutputTokens = toNonNegativeInt(sessionEntry && sessionEntry.outputTokens);\n` +
     `    const prevModel = normalize(sessionEntry && sessionEntry.model);\n` +
     `    const prevUpdatedAt = toIso(sessionEntry && sessionEntry.updatedAt);\n` +
-    `    if (prevTotalTokens != null) env.TOKENTRACKER_OPENCLAW_PREV_TOTAL_TOKENS = String(prevTotalTokens);\n` +
-    `    if (prevInputTokens != null) env.TOKENTRACKER_OPENCLAW_PREV_INPUT_TOKENS = String(prevInputTokens);\n` +
-    `    if (prevOutputTokens != null) env.TOKENTRACKER_OPENCLAW_PREV_OUTPUT_TOKENS = String(prevOutputTokens);\n` +
-    `    if (prevModel) env.TOKENTRACKER_OPENCLAW_PREV_MODEL = prevModel;\n` +
-    `    if (prevUpdatedAt) env.TOKENTRACKER_OPENCLAW_PREV_UPDATED_AT = prevUpdatedAt;\n` +
+    `    if (prevTotalTokens != null) env.TOKEN_PULSE_OPENCLAW_PREV_TOTAL_TOKENS = String(prevTotalTokens);\n` +
+    `    if (prevInputTokens != null) env.TOKEN_PULSE_OPENCLAW_PREV_INPUT_TOKENS = String(prevInputTokens);\n` +
+    `    if (prevOutputTokens != null) env.TOKEN_PULSE_OPENCLAW_PREV_OUTPUT_TOKENS = String(prevOutputTokens);\n` +
+    `    if (prevModel) env.TOKEN_PULSE_OPENCLAW_PREV_MODEL = prevModel;\n` +
+    `    if (prevUpdatedAt) env.TOKEN_PULSE_OPENCLAW_PREV_UPDATED_AT = prevUpdatedAt;\n` +
     `\n` +
     `    const hasLocalRuntime = fs.existsSync(trackerBinPath);\n` +
     `    const hasLocalDeps = fs.existsSync(depsMarkerPath);\n` +

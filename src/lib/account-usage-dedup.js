@@ -16,7 +16,7 @@
  *     safely displace earlier hours - that would need an unproven "absent =
  *     deleted" contract - and a 10:00 -> 10:30 bucket migration strands the
  *     old hour). Canonical truth for trae-cn therefore lives at the SESSION
- *     level (tokentracker_account_session_states; migrations/
+ *     level (token-pulse_account_session_states; migrations/
  *     20260817120000_account-session-states.sql): identity is
  *     (user_id, source, session_id) - device_id is NOT identity (the usage
  *     API request carries no device discriminator). Session-id evidence
@@ -98,7 +98,7 @@ function normalizeStateRow(observation) {
 
 /**
  * Whole-row LWW replace of canonical session states - mirrors
- * tokentracker_upsert_account_session_states() (migrations/
+ * token-pulse_upsert_account_session_states() (migrations/
  * 20260817120000_account-session-states.sql): a row applies only when its
  * snapshot_verified_at is STRICTLY newer (>) than the stored one. Replays of
  * the same observation are no-ops; equal stamps keep the first-applied row.
@@ -142,7 +142,7 @@ function upsertAccountSessionStates(states, observations) {
  *
  * @param {Map<string, object>|Array<object>} states
  * @param {{from?: string, to?: string}} [opts] - optional [from, to) window.
- * @returns {Array<object>} rows shaped like tokentracker_hourly aggregates.
+ * @returns {Array<object>} rows shaped like token-pulse_hourly aggregates.
  */
 function aggregateSessionStates(states, opts = {}) {
   const values = states instanceof Map ? [...states.values()] : Array.isArray(states) ? states : [];
@@ -218,7 +218,7 @@ function pickLegacyRow(rows) {
  *
  * @param {Array<{device_id: string, hour_start: string, source: string,
  *   model: string, updated_at?: string, total_tokens: number}>} rows -
- *   every device's tokentracker_hourly-shaped rows.
+ *   every device's token-pulse_hourly-shaped rows.
  * @returns {Array} canonical rows - one consistent row per (hour, model).
  */
 function dedupeAccountLevelRows(rows) {

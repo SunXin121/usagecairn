@@ -13,8 +13,8 @@ const {
   resolveOmpAgentDir,
 } = require("./rollout");
 
-const EXTENSION_FILENAME = "tokentracker-notify.ts";
-const MARKER = "// @tokentracker-managed-omp-extension";
+const EXTENSION_FILENAME = "token-pulse-notify.ts";
+const MARKER = "// @token-pulse-managed-omp-extension";
 
 /**
  * Test-only injection points for deterministic race repros.
@@ -45,17 +45,17 @@ function resolveTrackerBinDir(trackerDir) {
 }
 
 /**
- * Extension source written into ~/.omp/agent/extensions/tokentracker-notify.ts.
+ * Extension source written into ~/.omp/agent/extensions/token-pulse-notify.ts.
  * Uses require()-style node builtins so omp's extension rewriter can parse it.
  * Spawns notify.cjs --source=omp (already in AUTO_SYNC_SOURCES) after turns.
  */
 function buildOmpNotifyExtensionSource({ notifyPath }) {
   const notifyLiteral = JSON.stringify(notifyPath);
   return `${MARKER}
-// TokenTracker notify bridge for oh-my-pi (omp).
+// TokenPulse notify bridge for oh-my-pi (omp).
 // Passive session scanning still works without this file; the extension only
 // makes local dashboard refresh near-real-time after each agent turn.
-// Managed by TokenTracker init/uninstall — do not hand-edit the marker line.
+// Managed by TokenPulse init/uninstall — do not hand-edit the marker line.
 
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
@@ -72,9 +72,9 @@ let warnedMissing = false;
 
 function resolveNotifyPath() {
   const candidates = [];
-  if (process.env.TOKENTRACKER_NOTIFY) candidates.push(process.env.TOKENTRACKER_NOTIFY);
+  if (process.env.TOKEN_PULSE_NOTIFY) candidates.push(process.env.TOKEN_PULSE_NOTIFY);
   if (MANAGED_NOTIFY) candidates.push(MANAGED_NOTIFY);
-  candidates.push(path.join(os.homedir(), ".tokentracker", "bin", "notify.cjs"));
+  candidates.push(path.join(os.homedir(), ".token-pulse", "bin", "notify.cjs"));
   for (const candidate of candidates) {
     try {
       if (candidate && fs.existsSync(candidate)) return candidate;
@@ -89,7 +89,7 @@ function spawnNotify() {
     if (!warnedMissing) {
       warnedMissing = true;
       console.warn(
-        "[tokentracker-notify] notify.cjs not found; expected ~/.tokentracker/bin/notify.cjs",
+        "[token-pulse-notify] notify.cjs not found; expected ~/.token-pulse/bin/notify.cjs",
       );
     }
     return;
@@ -124,7 +124,7 @@ function spawnNotify() {
     if (!warnedMissing) {
       warnedMissing = true;
       console.warn(
-        "[tokentracker-notify] failed to spawn notify:",
+        "[token-pulse-notify] failed to spawn notify:",
         err && err.message ? err.message : String(err),
       );
     }
@@ -194,9 +194,9 @@ async function probeOmpHookState({ home = os.homedir(), trackerDir, env = proces
     try {
       const content = await fs.readFile(extensionPath, "utf8");
       managed = isManagedOmpExtension(content);
-      // Treat any tokentracker-notify extension as configured for status UX.
+      // Treat any token-pulse-notify extension as configured for status UX.
       // Ownership decisions (overwrite/remove) still require the exact MARKER.
-      configured = managed || /notify\.cjs|--source=omp|tokentracker/i.test(content);
+      configured = managed || /notify\.cjs|--source=omp|token-pulse/i.test(content);
     } catch {
       configured = false;
     }
@@ -474,7 +474,7 @@ async function removeOmpHook({ home = os.homedir(), trackerDir, env = process.en
   // concurrent replacement at the original path.
   const stagingPath = path.join(
     extensionsDir,
-    `.${EXTENSION_FILENAME}.tokentracker-removing-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    `.${EXTENSION_FILENAME}.token-pulse-removing-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
   );
 
   try {

@@ -20,7 +20,7 @@ async function createEngine() {
   // virtual filename, without accumulating WASM callbacks or touching disk.
   class TraeVFS extends FacadeVFS {
     constructor() {
-      super("tokentracker-trae", module);
+      super("token-pulse-trae", module);
     }
 
     jOpen(name, fileId, flags, outputFlags) {
