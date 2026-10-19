@@ -24,7 +24,7 @@ export async function fetchUsage(key, from, to, request = fetch) {
   const response = await request(`/api/usage?${query}`, {
     headers: { Authorization: `Bearer ${key}` }, cache: 'no-store',
   });
-  if (!response.ok) throw new Error(response.status === 401 ? '访问密钥无效' : `读取失败 (HTTP ${response.status})`);
+  if (!response.ok) throw new Error(response.status === 401 ? '访问密钥无效' : response.status === 400 ? '日期范围无效或数据过多，请缩短日期范围' : `读取失败 (HTTP ${response.status})`);
   return response.json();
 }
 

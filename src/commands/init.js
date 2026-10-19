@@ -175,7 +175,7 @@ async function cmdInit(argv, options = {}) {
   const existingConfig = await readJson(configPath);
   const notifyPath = path.join(binDir, "notify.cjs");
   const appDir = path.join(trackerDir, "app");
-  const trackerBinPath = path.join(appDir, "bin", "tracker.js");
+  const trackerBinPath = path.join(appDir, "bin", "token-pulse.js");
 
   renderWelcome();
 
@@ -1366,7 +1366,7 @@ function buildNotifyHandler({ trackerDir, packageName }) {
   const queueSignalPath = path.join(trackerDir, "notify.signal");
   const originalPath = path.join(trackerDir, "codex_notify_original.json");
   const fallbackPkg = packageName || "token-pulse";
-  const trackerBinPath = path.join(trackerDir, "app", "bin", "tracker.js");
+  const trackerBinPath = path.join(trackerDir, "app", "bin", "token-pulse.js");
 
   return `#!/usr/bin/env node
 'use strict';
@@ -1399,7 +1399,7 @@ const codexOriginalPath = ${JSON.stringify(originalPath)};
 const acodeOriginalPath = ${JSON.stringify(path.join(trackerDir, "acode_notify_original.json"))};
 const codeOriginalPath = ${JSON.stringify(path.join(trackerDir, "code_notify_original.json"))};
 const trackerBinPath = ${JSON.stringify(trackerBinPath)};
-  const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'tracker.js');
+  const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'token-pulse.js');
 const fallbackPkg = ${JSON.stringify(fallbackPkg)};
 const selfPath = path.resolve(__filename);
 const home = os.homedir();
@@ -2192,7 +2192,7 @@ async function installLocalTrackerApp({ appDir }) {
   // output belongs in the local runtime.
   const packageRoot = path.resolve(__dirname, "../..");
   const srcFrom = path.join(packageRoot, "src");
-  const binFrom = path.join(packageRoot, "bin", "tracker.js");
+  const binFrom = path.join(packageRoot, "bin", "token-pulse.js");
   const packageJsonFrom = path.join(packageRoot, "package.json");
   const nodeModulesFrom = path.join(packageRoot, "node_modules");
 
@@ -2204,7 +2204,7 @@ async function installLocalTrackerApp({ appDir }) {
 
   const srcTo = path.join(appDir, "src");
   const binToDir = path.join(appDir, "bin");
-  const binTo = path.join(binToDir, "tracker.js");
+  const binTo = path.join(binToDir, "token-pulse.js");
   const nodeModulesTo = path.join(appDir, "node_modules");
 
   await fs.rm(appDir, { recursive: true, force: true }).catch(() => {});

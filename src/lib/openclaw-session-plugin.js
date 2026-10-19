@@ -345,7 +345,7 @@ function buildSessionPluginMeta() {
 }
 
 function buildSessionPluginIndex({ trackerDir, packageName = "token-pulse", openclawHome }) {
-  const trackerBinPath = path.join(trackerDir, "app", "bin", "tracker.js");
+  const trackerBinPath = path.join(trackerDir, "app", "bin", "token-pulse.js");
   const fallbackPkg = packageName || "token-pulse";
   const safeOpenclawHome = openclawHome || path.join(os.homedir(), ".openclaw");
 
@@ -358,7 +358,7 @@ function buildSessionPluginIndex({ trackerDir, packageName = "token-pulse", open
     `const trackerBinPath = ${JSON.stringify(trackerBinPath)};\n` +
     `const fallbackPkg = ${JSON.stringify(fallbackPkg)};\n` +
     `const openclawHome = ${JSON.stringify(safeOpenclawHome)};\n` +
-    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'tracker.js');\n` +
+    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'token-pulse.js');\n` +
     `const triggerStatePath = path.join(trackerDir, 'openclaw.session-sync.trigger-state.json');\n` +
     `const SESSION_TRIGGER_THROTTLE_MS = 15_000;\n` +
     `\n` +

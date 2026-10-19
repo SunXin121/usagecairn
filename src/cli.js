@@ -13,7 +13,7 @@ const HELP = [
   '  token-pulse connect --show | --clear              Inspect or remove them',
   '  token-pulse init [--yes]                          Install collection hooks',
   '  token-pulse sync                                  Collect usage (uploads when connected)',
-  '  token-pulse upload                                Replay local usage to the server',
+  '  token-pulse upload [--replay]                     Upload new usage (--replay: full ledger)',
   '  token-pulse status                                Show hook status',
   '  token-pulse uninstall [--purge]                   Remove hooks and local state',
 ].join('\n');
@@ -49,7 +49,8 @@ async function run(argv) {
       return;
     }
     case 'upload': {
-      const result = await uploadQueue();
+      if (rest.length > 1 || (rest.length === 1 && rest[0] !== '--replay')) throw new Error('Usage: token-pulse upload [--replay]');
+      const result = await uploadQueue({ replay: rest[0] === '--replay' });
       console.log(`Uploaded ${result.uploaded} usage snapshots (${result.pending} pending bytes).`);
       return;
     }

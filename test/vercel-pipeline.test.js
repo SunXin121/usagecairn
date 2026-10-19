@@ -70,3 +70,32 @@ test('a missing or empty server key fails closed with 503', async () => {
     } finally { process.env.ACCESS_KEY = previous; }
   } finally { await db.close(); }
 });
+
+test('ingest accepts streamed JSON and preserves validation and public exports', async () => {
+  const { parseBucket, summarize } = require('../server/service.cjs');
+  assert.equal(parseBucket({ source: 'CLAUDE', model: 'test', hour_start: '2026-10-18T12:00:00Z' })[0], 'claude');
+  assert.equal(summarize([]).summary.total_tokens, 0);
+
+  const queries = [];
+  const handler = createHandler({ connect: async () => ({
+    async query(sql) { queries.push(sql); }, release() { queries.push('RELEASE'); },
+  }) });
+  const payload = { device_id: 'machine_00001', hourly: [{
+    source: 'claude', model: 'test', hour_start: '2026-10-18T12:00:00Z', total_tokens: 12,
+  }] };
+  const req = { url: '/api/ingest', method: 'POST', headers: { authorization: `Bearer ${tokenA}` },
+    async *[Symbol.asyncIterator]() { yield JSON.stringify(payload); } };
+  const res = response();
+  await handler(req, res);
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(res.body, { inserted: 1, skipped: 0 });
+  assert.equal(queries[0], 'BEGIN');
+  assert.equal(queries[2], 'COMMIT');
+  assert.equal(queries[3], 'RELEASE');
+
+  const invalid = await request(handler, '/api/ingest', 'POST', tokenA, { ...payload, hourly: [{ ...payload.hourly[0], total_tokens: -1 }] });
+  assert.equal(invalid.statusCode, 400);
+  assert.deepEqual(invalid.body, { error: 'Invalid total_tokens' });
+  assert.equal(queries.length, 4);
+  assert.equal((await request(handler, '/api/other')).statusCode, 404);
+});

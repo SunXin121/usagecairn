@@ -34,7 +34,7 @@ test('upload over real HTTP reaches the database once per snapshot and never lea
     const row = (hour, total) => ({ hour_start: hour, source: 'claude', model: 'claude-sonnet-4', input_tokens: total - 20, output_tokens: 20, total_tokens: total, conversation_count: 1 });
     await fs.writeFile(queuePath, `${JSON.stringify({ ...row('2026-10-18T12:00:00Z', 1250), prompt: 'SECRET_PROMPT_TEXT' })}\n${JSON.stringify(row('2026-10-18T13:00:00Z', 600))}\n`);
     assert.deepEqual(await uploadQueue({ queuePath, env: {} }), { uploaded: 2, pending: 0 });
-    assert.deepEqual(await uploadQueue({ queuePath, env: {} }), { uploaded: 2, pending: 0 });
+    assert.deepEqual(await uploadQueue({ queuePath, env: {} }), { uploaded: 0, pending: 0 });
     const usage = await new Promise((resolve, reject) => {
       http.get({ host: '127.0.0.1', port, path: '/api/usage?from=2026-10-18&to=2026-10-18', headers: { Authorization: `Bearer ${key}` } },
         (res) => { let body = ''; res.on('data', (c) => { body += c; }); res.on('end', () => resolve({ status: res.statusCode, body: JSON.parse(body) })); }).on('error', reject);

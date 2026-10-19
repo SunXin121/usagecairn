@@ -12,7 +12,7 @@ const {
   resolveOmoSubagentFiles,
   omoAgentDirCollidesWithOmp,
 } = require("../src/lib/rollout");
-const { computeRowCost, ensurePricingLoaded } = require("../src/lib/pricing");
+const { computeRowCost, ensurePricingLoaded } = require("../server/pricing");
 
 async function readJsonLines(filePath) {
   const raw = await fs.readFile(filePath, "utf8");

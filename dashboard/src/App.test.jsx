@@ -26,6 +26,11 @@ test('usage fetch attaches account key and renders server totals in the dashboar
   expect(screen.queryByText('排行榜')).toBeNull();
 });
 
+
+test('large usage ranges show an actionable error', async () => {
+  await expect(fetchUsage('key', '2020-01-01', '2026-01-01', async () => ({ ok: false, status: 400 })))
+    .rejects.toThrow('请缩短日期范围');
+});
 test('a late response from a signed-out account cannot replace the new account', async () => {
   const first = `tt_${'a'.repeat(64)}`;
   const second = `tt_${'b'.repeat(64)}`;

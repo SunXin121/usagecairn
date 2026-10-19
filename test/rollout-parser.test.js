@@ -83,7 +83,7 @@ const {
   filterColdCodexRolloutFiles,
   bucketKey,
 } = require("../src/lib/rollout");
-const { purgeProjectUsage } = require("../src/lib/project-usage-purge");
+const { purgeProjectUsage } = require("./helpers/project-usage-purge");
 
 const { mockPlatform, mockMethod } = require("./helpers/mock");
 const { resetWslProbeCache } = require("../src/lib/wsl-probe");

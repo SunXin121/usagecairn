@@ -1,14 +1,12 @@
 #!/usr/bin/env node
-// Fetch the live LiteLLM pricing JSON and write a slimmed snapshot used as the
-// day-1 offline fallback. Runs from `npm prepublishOnly`; can also be invoked
-// manually: `node scripts/build-pricing-seed.cjs`.
-
+// Refresh the server-side offline pricing fallback on demand.
+// Invoke manually with `npm run pricing:build-seed`.
 const fs = require("node:fs");
 const path = require("node:path");
 
 const LITELLM_URL =
   "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
-const OUT_PATH = path.resolve(__dirname, "../src/lib/pricing/seed-snapshot.json");
+const OUT_PATH = path.resolve(__dirname, "../server/pricing/seed-snapshot.json");
 const TIMEOUT_MS = 30_000;
 
 const KEEP_FIELDS = [

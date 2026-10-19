@@ -238,7 +238,7 @@ Triggers non-blocking 'token-pulse sync --auto --from-openclaw' runs when OpenCl
 }
 
 function buildHookHandler({ trackerDir, packageName = "token-pulse", openclawHome }) {
-  const trackerBinPath = path.join(trackerDir, "app", "bin", "tracker.js");
+  const trackerBinPath = path.join(trackerDir, "app", "bin", "token-pulse.js");
   const fallbackPkg = packageName || "token-pulse";
   const safeOpenclawHome = openclawHome || path.join(os.homedir(), ".openclaw");
 
@@ -252,7 +252,7 @@ function buildHookHandler({ trackerDir, packageName = "token-pulse", openclawHom
     `const fallbackPkg = ${JSON.stringify(fallbackPkg)};\n` +
     `const openclawHome = ${JSON.stringify(safeOpenclawHome)};\n` +
     `const throttlePath = path.join(trackerDir, 'openclaw.sync.throttle');\n` +
-    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'tracker.js');\n` +
+    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'token-pulse.js');\n` +
     `const THROTTLE_MS = 15_000;\n` +
     `\n` +
     `module.exports = async function handler(event) {\n` +

@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const fssync = require("node:fs");
 const cp = require("node:child_process");
 const readline = require("node:readline");
+const { uploadedOffset } = require("./upload");
 
 const { resolveInstallPaths, resolveZcodeNativeDbPath, resolveMimoNativeDbPath, ensureFlatCursor } = require("../lib/install-resolver");
 const { multiInstallParse, mergeBothFileSources } = require("../lib/multi-install-parser");
@@ -158,7 +159,6 @@ const {
   fetchCursorUsageCsv,
   parseCursorCsv,
 } = require("../lib/cursor-config");
-const { purgeProjectUsage } = require("../lib/project-usage-purge");
 const {
   fetchTraeCnUsageWithAuth,
   resolveTraeCnStoragePath,
@@ -533,9 +533,9 @@ async function cmdSync(argv, context = {}) {
     const configPath = path.join(trackerDir, "config.json");
     const cursorsPath = path.join(trackerDir, "cursors.json");
     const queuePath = path.join(trackerDir, "queue.jsonl");
-    const queueStatePath = path.join(trackerDir, "queue.state.json");
-    const projectQueuePath = path.join(trackerDir, "project.queue.jsonl");
-    const projectQueueStatePath = path.join(trackerDir, "project.queue.state.json");
+    // The server accepts aggregate buckets only. Keep parser-level project
+    // support for legacy data/tests, but do not produce an unconsumed ledger.
+    const projectQueuePath = null;
     const grokSignalPath = path.join(trackerDir, "grok-last-session.json");
     const legacyGrokSignalPath = path.join(trackerDir, "tracker", "grok-last-session.json");
 
@@ -3038,21 +3038,6 @@ async function cmdSync(argv, context = {}) {
       }
     }
 
-    if (isFullSourceScan && cursors?.projectHourly?.projects && projectQueuePath && projectQueueStatePath) {
-      for (const [projectKey, meta] of Object.entries(cursors.projectHourly.projects)) {
-        if (!meta || typeof meta !== "object") continue;
-        if (meta.status !== "blocked" || !meta.purge_pending) continue;
-        await purgeProjectUsage({
-          projectKey,
-          projectQueuePath,
-          projectQueueStatePath,
-          projectState: cursors.projectHourly,
-          cursors,
-        });
-        meta.purge_pending = false;
-        meta.purged_at = new Date().toISOString();
-      }
-    }
 
     const totalParsed =
       parseResult.filesProcessed +
@@ -3194,10 +3179,8 @@ async function cmdSync(argv, context = {}) {
 
     progress?.stop();
 
-    // Local queue backlog after this run. Uploads replay the queue from byte 0,
-    // so `offset` here only feeds the human-readable summary.
-    const afterState = (await readJson(queueStatePath)) || { offset: 0 };
-    const pendingBytes = Math.max(0, (await safeStatSize(queuePath)) - Number(afterState.offset || 0));
+    // Report backlog for the current destination and queue identity.
+    const pendingBytes = Math.max(0, (await safeStatSize(queuePath)) - await uploadedOffset(queuePath));
 
     if (!opts.auto) {
       const codexRecordOnlyWarning = formatRecordOnlyWarning(countRecordOnlyFiles(cursors));

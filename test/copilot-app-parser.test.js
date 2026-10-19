@@ -7,7 +7,7 @@ const os = require("node:os");
 const path = require("node:path");
 const cp = require("node:child_process");
 
-const { computeRowCost } = require("../src/lib/pricing");
+const { computeRowCost } = require("../server/pricing");
 const { mockPlatform, mockMethod } = require("./helpers/mock");
 const {
   parseCopilotIncremental,

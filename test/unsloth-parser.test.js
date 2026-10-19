@@ -25,7 +25,7 @@ const {
   normalizeUnslothUsageRow,
   parseUnslothIncremental,
 } = require("../src/lib/rollout");
-const { computeRowCost } = require("../src/lib/pricing");
+const { computeRowCost } = require("../server/pricing");
 
 const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
 

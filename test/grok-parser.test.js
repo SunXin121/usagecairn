@@ -10,7 +10,7 @@ const {
   parseGrokBuildIncremental,
   resolveGrokBuildSessions,
 } = require("../src/lib/rollout");
-const { computeRowCost, ensurePricingLoaded, getModelPricing } = require("../src/lib/pricing");
+const { computeRowCost, ensurePricingLoaded, getModelPricing } = require("../server/pricing");
 const { normalizeGrokUsage } = require("../src/lib/grok-usage");
 
 function makeSession({

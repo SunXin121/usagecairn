@@ -1,6 +1,6 @@
 {
   "name": "token-pulse",
-  "version": "1.4.5",
+  "version": "1.0.0",
   "description": "Local AI token usage collector with a PostgreSQL-backed web dashboard",
   "repository": {
     "type": "git",
@@ -37,15 +37,14 @@
     "dashboard:build": "npm --prefix dashboard run build",
     "dashboard:dev": "npm --prefix dashboard run dev",
     "dashboard:preview": "npm --prefix dashboard run preview",
-    "pricing:build-seed": "node scripts/build-pricing-seed.cjs",
-    "prepublishOnly": "node scripts/build-pricing-seed.cjs"
+    "pricing:build-seed": "node scripts/build-pricing-seed.cjs"
   },
   "dependencies": {
-    "@mongodb-js/zstd": "^2.0.1",
-    "pg": "^8.16.3"
+    "@mongodb-js/zstd": "^2.0.1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8"
+    "@electric-sql/pglite": "^0.5.8",
+    "pg": "^8.16.3"
   },
   "license": "MIT",
   "publishConfig": {

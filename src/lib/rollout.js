@@ -9,6 +9,7 @@ const { isDeepStrictEqual } = require("node:util");
 const crypto = require("node:crypto");
 const { ensureDir, writeJson, chmod600IfPossible } = require("./fs");
 const { physicalJsonlRecords } = require("./jsonl-lines");
+const { readKiroJsonlTokens } = require("./kiro-jsonl");
 const { readSqliteJsonRows, readSqliteJsonRowsAsync } = require("./sqlite-reader");
 const wsl = require("./wsl-probe");
 const { resolveInstallPaths } = require("./install-resolver");
@@ -7674,62 +7675,6 @@ function readKiroDbTokens(dbPath, sinceId, sqliteOptions = {}) {
   }
 }
 
-// Read Kiro token data from JSONL fallback (tokens_generated.jsonl).
-// Each line: {"model":"agent","provider":"kiro","promptTokens":N,"generatedTokens":N}
-// The fallback file does not include per-row timestamps, so newly appended rows are
-// bucketed using the file mtime observed during this sync. We track a separate JSONL
-// cursor so it never shares state with the SQLite path.
-function countKiroJsonlLines(jsonlPath) {
-  if (!jsonlPath || !fssync.existsSync(jsonlPath)) return 0;
-  try {
-    const raw = fssync.readFileSync(jsonlPath, "utf8");
-    return raw.split("\n").filter((l) => l.trim()).length;
-  } catch (_e) {
-    return 0;
-  }
-}
-
-function readKiroJsonlTokens(jsonlPath, sinceLineIndex) {
-  if (!jsonlPath || !fssync.existsSync(jsonlPath)) {
-    return { rows: [], lineCount: 0, reset: false };
-  }
-  const startLine = Number.isFinite(sinceLineIndex) && sinceLineIndex > 0 ? sinceLineIndex : 0;
-  let raw;
-  try {
-    raw = fssync.readFileSync(jsonlPath, "utf8");
-  } catch (_e) {
-    return { rows: [], lineCount: 0, reset: false };
-  }
-  const lines = raw.split("\n").filter((l) => l.trim());
-  const lineCount = lines.length;
-  if (startLine > lineCount) {
-    return { rows: [], lineCount, reset: true };
-  }
-  let mtime;
-  try {
-    mtime = fssync.statSync(jsonlPath).mtime.toISOString();
-  } catch (_e) {
-    mtime = new Date().toISOString();
-  }
-  const timestamp = mtime.replace("T", " ").replace("Z", "").slice(0, 19);
-  const rows = [];
-  for (let i = startLine; i < lines.length; i++) {
-    try {
-      const obj = JSON.parse(lines[i]);
-      rows.push({
-        id: i + 1,
-        model: obj.model || "agent",
-        provider: obj.provider || "kiro",
-        tokens_prompt: obj.promptTokens || 0,
-        tokens_generated: obj.generatedTokens || 0,
-        timestamp,
-      });
-    } catch (_e) {
-      // skip malformed lines
-    }
-  }
-  return { rows, lineCount, reset: false };
-}
 
 // Build a sorted timeline of model usage from Kiro .chat metadata files
 function buildKiroModelTimeline(basePath) {
@@ -7829,6 +7774,7 @@ async function parseKiroIncremental({ basePath, dbPath, jsonlPath, cursors, queu
   let rows = [];
   let nextDbId = lastDbId;
   let nextJsonlLine = lastJsonlLine;
+  let nextJsonlCursor = jsonlState;
   let usingDb = false;
   if (fssync.existsSync(resolvedDbPath)) {
     rows = readKiroDbTokens(resolvedDbPath, lastDbId, sqliteOptions);
@@ -7838,18 +7784,20 @@ async function parseKiroIncremental({ basePath, dbPath, jsonlPath, cursors, queu
     // run, we must not re-read lines that the DB path already consumed.
     // Advance the JSONL line cursor to the current file tail.
     if (fssync.existsSync(resolvedJsonlPath)) {
-      const tailLineCount = countKiroJsonlLines(resolvedJsonlPath);
-      if (tailLineCount > nextJsonlLine) nextJsonlLine = tailLineCount;
+      const tail = await readKiroJsonlTokens(resolvedJsonlPath, jsonlState, { countOnly: true });
+      nextJsonlCursor = tail.cursor;
+      nextJsonlLine = tail.lineCount;
     }
   } else if (fssync.existsSync(resolvedJsonlPath)) {
-    const jsonlResult = readKiroJsonlTokens(resolvedJsonlPath, lastJsonlLine);
+    const jsonlResult = await readKiroJsonlTokens(resolvedJsonlPath, jsonlState);
     rows = jsonlResult.rows;
     nextJsonlLine = jsonlResult.lineCount;
+    nextJsonlCursor = jsonlResult.cursor;
     if (jsonlResult.reset) {
       cursors.kiro = {
         ...kiroState,
         lastDbId,
-        jsonl: { lastLine: jsonlResult.lineCount, updatedAt: new Date().toISOString() },
+        jsonl: { ...nextJsonlCursor, updatedAt: new Date().toISOString() },
         updatedAt: new Date().toISOString(),
       };
       return {
@@ -7865,7 +7813,7 @@ async function parseKiroIncremental({ basePath, dbPath, jsonlPath, cursors, queu
     cursors.kiro = {
       ...kiroState,
       lastDbId,
-      jsonl: { lastLine: nextJsonlLine, updatedAt: new Date().toISOString() },
+      jsonl: { ...nextJsonlCursor, updatedAt: new Date().toISOString() },
       updatedAt: new Date().toISOString(),
     };
     return { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
@@ -7934,7 +7882,7 @@ async function parseKiroIncremental({ basePath, dbPath, jsonlPath, cursors, queu
     ...kiroState,
     lastId: maxId,
     lastDbId: maxId,
-    jsonl: { lastLine: nextJsonlLine, updatedAt },
+    jsonl: { ...nextJsonlCursor, updatedAt },
     updatedAt,
   };
 

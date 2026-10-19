@@ -7,7 +7,8 @@ const fssync = require("node:fs");
 const pkg = require("../../package.json");
 const { readJson } = require("../lib/fs");
 const { resolveTrackerPaths } = require("../lib/pulse-paths");
-const { resolveUploadConfig, defaultQueuePath } = require("../lib/upload-config");
+const { resolveUploadConfig } = require("../lib/upload-config");
+const { uploadedOffset } = require("./upload");
 const { formatBytes } = require("../lib/progress");
 const {
   resolveAnythingllmDbPath,
@@ -65,11 +66,10 @@ async function collectProviders(env = process.env) {
 async function collectStatus({ home = os.homedir(), env = process.env } = {}) {
   const { trackerDir } = await resolveTrackerPaths({ home });
   const queuePath = path.join(trackerDir, "queue.jsonl");
-  const statePath = path.join(trackerDir, "queue.state.json");
   const config = (await readJson(path.join(trackerDir, "config.json"))) || {};
-  const queueState = (await readJson(statePath)) || { offset: 0 };
+  const uploadOffset = await uploadedOffset(queuePath, env);
   const cursors = (await readJson(path.join(trackerDir, "cursors.json"))) || {};
-  const upload = resolveUploadConfig({ queuePath: defaultQueuePath() });
+  const upload = resolveUploadConfig({ queuePath, env });
 
   const queueBytes = await fileSize(queuePath);
   return {
@@ -84,9 +84,9 @@ async function collectStatus({ home = os.homedir(), env = process.env } = {}) {
       invalid: Boolean(upload.invalid),
     },
     queue: {
-      pending_bytes: Math.max(0, queueBytes - Number(queueState.offset || 0)),
+      pending_bytes: Math.max(0, queueBytes - uploadOffset),
       size_bytes: queueBytes,
-      offset: Number(queueState.offset || 0),
+      offset: uploadOffset,
     },
     last_parse: cursors.updatedAt || null,
     last_notify: await fileMtimeIso(path.join(trackerDir, "notify.signal")),
