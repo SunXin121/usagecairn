@@ -83,6 +83,7 @@ const {
   resolveMuseHome,
   resolveTraeStoragePath,
 } = require("../lib/rollout");
+const { installScheduler } = require("../lib/scheduler");
 const {
   BOLD,
   DIM,
@@ -202,6 +203,7 @@ async function cmdInit(argv, options = {}) {
 
   if (opts.dryRun) {
     const preview = await buildDryRunSummary({ opts, home, trackerDir, notifyPath });
+    if (!opts.noScheduler) preview.summary.push({ label: "Sync scheduler", status: "installed", detail: "Will enable 5-minute background sync" });
     renderLocalReport({ summary: preview.summary, isDryRun: true });
     return;
   }
@@ -227,6 +229,15 @@ async function cmdInit(argv, options = {}) {
   } catch (err) {
     spinner.stop();
     throw err;
+  }
+
+  // Passive sources have no event hook. Install a per-user five-minute timer
+  // after the local runtime is copied; a failed activation is not success.
+  if (!opts.noScheduler) {
+    const scheduler = await installScheduler({ home, trackerBinPath });
+    setup.summary.push(scheduler.installed
+      ? { label: "Sync scheduler", status: "installed", detail: `Background sync every ${scheduler.intervalMinutes} min` }
+      : { label: "Sync scheduler", status: "skipped", detail: scheduler.reason || "Could not activate timer" });
   }
   spinner.stop();
 
@@ -1344,11 +1355,12 @@ function containsNestedTokenPulseNotify(cmd, expectedNotify) {
 }
 
 function parseArgs(argv) {
-  const out = { noOpen: false, yes: false, dryRun: false };
+  const out = { noOpen: false, yes: false, dryRun: false, noScheduler: false };
   for (const arg of argv) {
     if (arg === "--no-open") out.noOpen = true;
     else if (arg === "--yes") out.yes = true;
     else if (arg === "--dry-run") out.dryRun = true;
+    else if (arg === "--no-scheduler") out.noScheduler = true;
     else throw new Error(`Unknown option: ${arg}`);
   }
   return out;

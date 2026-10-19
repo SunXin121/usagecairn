@@ -11,7 +11,7 @@ const HELP = [
   '',
   '  usagecairn connect --api-url <url> --key <key>   Save Vercel upload credentials',
   '  usagecairn connect --show | --clear              Inspect or remove them',
-  '  usagecairn init [--yes]                          Install collection hooks',
+  '  usagecairn init [--yes] [--no-scheduler]        Install hooks and background sync timer',
   '  usagecairn sync                                  Collect usage (uploads when connected)',
   '  usagecairn upload [--replay]                     Upload new usage (--replay: full ledger)',
   '  usagecairn status                                Show hook status',

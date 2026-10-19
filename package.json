@@ -1,6 +1,6 @@
 {
   "name": "usagecairn",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Local AI token usage collector with a PostgreSQL-backed web dashboard",
   "repository": {
     "type": "git",

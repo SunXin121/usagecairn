@@ -29,6 +29,7 @@ const { removeOpenclawSessionPluginConfig } = require("../lib/openclaw-session-p
 const { removeGrokHook } = require("../lib/grok-hook");
 const { removeOmpHook } = require("../lib/omp-hook");
 const { resolveTrackerPaths } = require("../lib/pulse-paths");
+const { removeScheduler } = require("../lib/scheduler");
 
 async function cmdUninstall(argv) {
   const opts = parseArgs(argv);
@@ -131,6 +132,9 @@ async function cmdUninstall(argv) {
   });
   const openclawHookRemove = await removeOpenclawHookConfig({ home, trackerDir, env: process.env });
   const grokHookRemove = await removeGrokHook({ home, trackerDir, env: process.env });
+  // Remove the background sync scheduler installed by init (passive sources).
+  const schedulerRemove = await removeScheduler({ home });
+
   const ompHookRemove = await removeOmpHook({ home, trackerDir, env: process.env });
 
   // Remove installed notify handler.
@@ -240,6 +244,11 @@ async function cmdUninstall(argv) {
         ? `- Grok Build hook removed: ${grokHookRemove.hookPath}`
         : "- Grok Build hook: no change",
       formatOmpHookRemoveLine(ompHookRemove),
+      schedulerRemove?.removed
+        ? "- Sync scheduler removed"
+        : schedulerRemove?.reason
+          ? `- Sync scheduler: not removed (${schedulerRemove.reason})`
+          : "- Sync scheduler: no change",
       opts.purge ? `- Purged: ${path.join(home, ".token-pulse")}` : "- Purge: skipped (use --purge)",
       ...(machineIdSeedKept
         ? [`- Kept: ${machineIdSeedPath} (cloud device identity — a reinstall reuses the same device; delete it to fully reset)`]
