@@ -506,7 +506,7 @@ function parseCursorCsv(csvText) {
 }
 
 /**
- * Normalize a Cursor CSV record to TokenPulse's standard token format.
+ * Normalize a Cursor CSV record to UsageCairn's standard token format.
  */
 function normalizeCursorUsage(record) {
   const inputTokens = Math.max(0, Math.floor(record.inputTokens || 0));

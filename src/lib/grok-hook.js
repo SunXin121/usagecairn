@@ -229,7 +229,7 @@ if (totalTokens <= 0) {
   process.exit(0);
 }
 
-// Write a signal that the TokenPulse sync / local API can pick up
+// Write a signal that the UsageCairn sync / local API can pick up
 const trackerDir = ${JSON.stringify(trackerDir)};
 const signalDir = trackerDir;
 try { fs.mkdirSync(signalDir, { recursive: true }); } catch {}

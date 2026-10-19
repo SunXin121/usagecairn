@@ -32,10 +32,10 @@ npm run dashboard:build      # vite build → dashboard/dist
 ## Local workflow
 
 ```bash
-node bin/token-pulse.js init --yes                       # install provider hooks
-node bin/token-pulse.js connect --api-url <url> --key tt_…   # persist upload target
-node bin/token-pulse.js sync                             # parse provider logs, then upload
-node bin/token-pulse.js status                           # queue/backlog/upload diagnostics
+node bin/usagecairn.js init --yes                       # install provider hooks
+node bin/usagecairn.js connect --api-url <url> --key tt_…   # persist upload target
+node bin/usagecairn.js sync                             # parse provider logs, then upload
+node bin/usagecairn.js status                           # queue/backlog/upload diagnostics
 ```
 
 `npm --prefix dashboard run dev` serves the dashboard with `/api` proxied to

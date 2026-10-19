@@ -456,7 +456,7 @@ const SYNC_SKIP_MARKER = "sync.skip.json";
 
 // A skipped sync used to exit 0 with no output whatsoever, so lock debris left
 // by a killed run stalled every parse for a day with no visible signal and
-// nothing for `token-pulse status` to report (issue #431). Leave a queryable
+// nothing for `usagecairn status` to report (issue #431). Leave a queryable
 // marker that separates ordinary contention (`lock_busy`) from a lease whose
 // owner is gone (`lock_debris`, the state that needs attention).
 async function recordSyncSkip(trackerDir, lockPath) {
@@ -3190,7 +3190,7 @@ async function cmdSync(argv, context = {}) {
           `- Parsed files: ${totalParsed}`,
           `- New 30-min buckets queued: ${totalBuckets}`,
           pendingBytes > 0
-            ? `- Local backlog: ${formatBytes(pendingBytes)} awaiting upload (run: token-pulse upload)`
+            ? `- Local backlog: ${formatBytes(pendingBytes)} awaiting upload (run: usagecairn upload)`
             : "- Local backlog: none",
           codexRecordOnlyWarning ? `- Warning: ${codexRecordOnlyWarning}` : null,
           "",

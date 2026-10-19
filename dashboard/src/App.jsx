@@ -235,7 +235,7 @@ export default function App() {
       <aside className="hidden w-[220px] shrink-0 flex-col p-3 lg:flex" aria-label="导航">
         <div className="flex items-center gap-2 px-2 py-5 text-sm font-semibold">
           <img src="/app-icon.png" alt="" width="28" height="28" className="rounded-md" />
-          Token Pulse
+          UsageCairn
         </div>
         <nav className="space-y-1 pt-4 text-[13px]">
           {navItems.map(([id, Icon, label]) => (
@@ -302,7 +302,7 @@ export default function App() {
                 <Card className="max-w-xl p-6">
                   <h2 className="font-semibold">数据连接</h2>
                   <p className="mt-3 text-sm text-oai-gray-500">
-                    当前账号已连接。CLI 使用同一访问密钥上传，执行 <code>token-pulse sync</code> 或 <code>token-pulse upload</code> 后刷新看板。
+                    当前账号已连接。CLI 使用同一访问密钥上传，执行 <code>usagecairn sync</code> 或 <code>usagecairn upload</code> 后刷新看板。
                   </p>
                   <button onClick={signOut} className="mt-5 rounded-md border border-oai-gray-200 px-3 py-2 text-sm dark:border-oai-gray-800">退出并清除会话密钥</button>
                 </Card>

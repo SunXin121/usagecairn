@@ -6081,7 +6081,7 @@ function readZcodeNativeUsageMessages(dbPath, sqliteOptions = {}, { propagateRea
 // accumulated months of history in the OpenCode message tables. The native
 // table is authoritative from its first completed row onward, but it is not a
 // historical backfill. Keep legacy rows before that boundary so merely adding
-// the new table cannot make older usage disappear from TokenPulse.
+// the new table cannot make older usage disappear from UsageCairn.
 function readZcodeDbMessages(dbPath, sqliteOptions = {}, { propagateReadFailure = false } = {}) {
   if (!dbPath || !fssync.existsSync(dbPath)) return [];
   const nativeMessages = readZcodeNativeUsageMessages(dbPath, sqliteOptions, { propagateReadFailure });
@@ -11927,7 +11927,7 @@ async function parseWorkbuddyIncremental({
 
 function resolveOmpHome(env = process.env) {
   const home = env.HOME || require("node:os").homedir();
-  // Honor TokenPulse override first, then oh-my-pi upstream env vars.
+  // Honor UsageCairn override first, then oh-my-pi upstream env vars.
   if (env.OMP_HOME) return env.OMP_HOME;
   if (env.PI_CONFIG_DIR) return path.join(home, env.PI_CONFIG_DIR);
   if (process.platform === "win32") {
@@ -12148,7 +12148,7 @@ async function resolveOmpFileCwd(filePath) {
 // OmO is a router — the upstream model name is recorded per message and there
 // is no global default (fallback: "omo-unknown").
 //
-// Path overrides are TokenPulse-only (TOKEN_PULSE_OMO_AGENT_DIR /
+// Path overrides are UsageCairn-only (TOKEN_PULSE_OMO_AGENT_DIR /
 // TOKEN_PULSE_OMO_HOME / OMO_HOME). PI_CONFIG_DIR and PI_CODING_AGENT_DIR are
 // deliberately NOT honored here: those belong to pi/omp, and routing them to a
 // third provider would reintroduce the ambiguity decidePiCodingAgentDirOwner
@@ -13052,7 +13052,7 @@ async function parseClineIncremental({
 // the real Zed model name is preserved for display.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Providers whose usage is ALSO captured by a dedicated TokenPulse parser, so
+// Providers whose usage is ALSO captured by a dedicated UsageCairn parser, so
 // counting them via the Zed thread store would double-count. Zed's native model
 // providers (zed.dev, copilot_chat, openai*, anthropic, google, ollama,
 // lmstudio, …) do NOT overlap: e.g. Zed's copilot_chat talks to the Copilot API
@@ -17395,7 +17395,7 @@ async function parseMinimaxCodeIncremental(options = {}) {
 // config.json to enumerate every rootPath rather than just globbing the
 // default directory.
 //
-// Token semantics map directly onto TokenPulse conventions — `inputTokens`
+// Token semantics map directly onto UsageCairn conventions — `inputTokens`
 // is already pure non-cached input (no Codex-style trap, see
 // feedback_rollout_input_semantics.md). Re-parses are idempotent: the header
 // is rewritten as the session grows, and we dedup by sessionId combined with
@@ -23795,7 +23795,7 @@ const DSH_SESSION_TEXT_MAX_BYTES = 128 * 1024 * 1024;
 const DSH_SOURCE = "dsh";
 
 // Precedence mirrors the harness's own resolveDshHome: an explicit
-// TokenPulse override, then the harness's $DSH_HOME, then `~/.dsh`. Tests
+// UsageCairn override, then the harness's $DSH_HOME, then `~/.dsh`. Tests
 // isolate $DSH_HOME via the `withHome` helper, so honoring it here cannot leak
 // the real home past test isolation.
 function resolveDshHome(env = process.env) {
@@ -23807,7 +23807,7 @@ function resolveDshHome(env = process.env) {
   return path.join(os.homedir(), ".dsh");
 }
 
-// Windows users commonly run Harness inside WSL while TokenPulse itself runs
+// Windows users commonly run Harness inside WSL while UsageCairn itself runs
 // natively. Respect the repository-wide WSL mode contract and keep explicit
 // DSH home overrides authoritative: an override is a complete user choice, not
 // one half of an automatic native/WSL discovery pair.
@@ -25055,7 +25055,7 @@ function isCommandCodeSessionLogName(name) {
   );
 }
 
-// Precedence mirrors the other passive readers: an explicit TokenPulse
+// Precedence mirrors the other passive readers: an explicit UsageCairn
 // override first, then the CLI's own `~/.commandcode`.
 function resolveCommandCodeHome(env = process.env) {
   const explicit = env?.TOKEN_PULSE_COMMANDCODE_HOME;
@@ -25063,7 +25063,7 @@ function resolveCommandCodeHome(env = process.env) {
   return path.join(os.homedir(), COMMAND_CODE_HOME_DIR);
 }
 
-// Windows users commonly run the `cmd` CLI inside WSL while TokenPulse itself
+// Windows users commonly run the `cmd` CLI inside WSL while UsageCairn itself
 // runs natively. Respect the repository-wide WSL mode contract and keep explicit
 // home overrides authoritative: an override is a complete user choice, not one
 // half of an automatic native/WSL discovery pair.

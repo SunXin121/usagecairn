@@ -37,7 +37,7 @@ function resolveOpenclawSessionPluginPaths({
 async function installOpenclawSessionPlugin({
   home = os.homedir(),
   trackerDir,
-  packageName = "token-pulse",
+  packageName = "usagecairn",
   env = process.env,
 } = {}) {
   const paths = resolveOpenclawSessionPluginPaths({ home, trackerDir, env });
@@ -86,7 +86,7 @@ async function installOpenclawSessionPlugin({
 async function ensureOpenclawSessionPluginFiles({
   pluginDir,
   trackerDir,
-  packageName = "token-pulse",
+  packageName = "usagecairn",
   openclawHome,
 } = {}) {
   if (!pluginDir || !trackerDir) throw new Error("pluginDir and trackerDir are required");
@@ -314,7 +314,7 @@ async function removeOpenclawSessionPluginConfig({
 function buildSessionPluginPackageJson() {
   return `${JSON.stringify(
     {
-      name: "@token-pulse/openclaw-session-sync",
+      name: "@usagecairn/openclaw-session-sync",
       version: "0.0.0",
       private: true,
       type: "module",
@@ -331,8 +331,8 @@ function buildSessionPluginMeta() {
   return `${JSON.stringify(
     {
       id: OPENCLAW_SESSION_PLUGIN_ID,
-      name: "TokenPulse OpenClaw Session Sync",
-      description: "Trigger token-pulse sync on OpenClaw agent/session lifecycle events.",
+      name: "UsageCairn OpenClaw Session Sync",
+      description: "Trigger usagecairn sync on OpenClaw agent/session lifecycle events.",
       configSchema: {
         type: "object",
         additionalProperties: false,
@@ -344,9 +344,9 @@ function buildSessionPluginMeta() {
   )}\n`;
 }
 
-function buildSessionPluginIndex({ trackerDir, packageName = "token-pulse", openclawHome }) {
-  const trackerBinPath = path.join(trackerDir, "app", "bin", "token-pulse.js");
-  const fallbackPkg = packageName || "token-pulse";
+function buildSessionPluginIndex({ trackerDir, packageName = "usagecairn", openclawHome }) {
+  const trackerBinPath = path.join(trackerDir, "app", "bin", "usagecairn.js");
+  const fallbackPkg = packageName || "usagecairn";
   const safeOpenclawHome = openclawHome || path.join(os.homedir(), ".openclaw");
 
   return (
@@ -358,7 +358,7 @@ function buildSessionPluginIndex({ trackerDir, packageName = "token-pulse", open
     `const trackerBinPath = ${JSON.stringify(trackerBinPath)};\n` +
     `const fallbackPkg = ${JSON.stringify(fallbackPkg)};\n` +
     `const openclawHome = ${JSON.stringify(safeOpenclawHome)};\n` +
-    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'token-pulse.js');\n` +
+    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'usagecairn.js');\n` +
     `const triggerStatePath = path.join(trackerDir, 'openclaw.session-sync.trigger-state.json');\n` +
     `const SESSION_TRIGGER_THROTTLE_MS = 15_000;\n` +
     `\n` +

@@ -22,11 +22,11 @@ function warnSqliteUnavailable({ dbPath, label, cliError, nodeSqliteError, env, 
   const out = stderr && typeof stderr.write === "function" ? stderr : process.stderr;
   const displayLabel = label || "local";
   out.write(
-    `[token-pulse] Cannot read ${displayLabel} SQLite database. Install sqlite3 CLI and add it to PATH, or use Node.js 22+ with node:sqlite support. Path: ${dbPath}\n`,
+    `[usagecairn] Cannot read ${displayLabel} SQLite database. Install sqlite3 CLI and add it to PATH, or use Node.js 22+ with node:sqlite support. Path: ${dbPath}\n`,
   );
   if (isDebugEnabled(env)) {
-    out.write(`[token-pulse] sqlite3 CLI failed: ${formatError(cliError)}\n`);
-    out.write(`[token-pulse] node:sqlite failed: ${formatError(nodeSqliteError)}\n`);
+    out.write(`[usagecairn] sqlite3 CLI failed: ${formatError(cliError)}\n`);
+    out.write(`[usagecairn] node:sqlite failed: ${formatError(nodeSqliteError)}\n`);
   }
 }
 

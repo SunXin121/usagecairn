@@ -58,7 +58,7 @@ const TRAE_CN_IV_LEN = 16;
 // client's byteCrypto.js (XOR the pair to recover the KDF secret). Failure
 // signature when TRAE ships a new key: readTraeCnAuthFromStorage throws
 // "Trae CN auth payload is malformed", sync skips the source, and
-// `token-pulse status` reports auth "malformed" — re-extract the pair
+// `usagecairn status` reports auth "malformed" — re-extract the pair
 // from the updated client to restore decryption.
 const TRAE_CN_JG = Buffer.from([
   82, 9, 106, 213, 48, 54, 165, 56, 191, 64, 163, 158, 129, 243, 215, 251, 124, 227, 57, 130,
@@ -327,7 +327,7 @@ async function fetchTraeCnUsagePage({
       // parameter is ignored; pinned by the "sends the exact request" test).
       // The whole flow is behind the explicit TOKEN_PULSE_TRAE_CN_USAGE
       // opt-in, the JWT is never logged, never written to the queue/cursor
-      // state, and never uploaded to the TokenPulse cloud (queue rows carry
+      // state, and never uploaded to the UsageCairn cloud (queue rows carry
       // token counters only; transport exceptions are sanitized).
       response = await fetchImpl(TRAE_CN_USAGE_URL, {
         method: "POST",

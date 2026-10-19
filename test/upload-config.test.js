@@ -60,6 +60,6 @@ test('connect rejects unsafe URLs and empty keys, accepts any key format, and ca
     await cmdConnect(['--api-url', 'https://tracker.example.com', '--key', 'my-custom-key-2026'], { queuePath, log: () => {} });
     assert.equal((await cmdConnect(['--clear'], { queuePath, log: () => {} })).cleared, true);
     assert.deepEqual(await readUploadConfig(queuePath), { apiUrl: null, accessKey: null });
-    await assert.rejects(uploadQueue({ queuePath, env: {}, request: async () => ({ ok: true, status: 200 }) }), /token-pulse connect/);
+    await assert.rejects(uploadQueue({ queuePath, env: {}, request: async () => ({ ok: true, status: 200 }) }), /usagecairn connect/);
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });

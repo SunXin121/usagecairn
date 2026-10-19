@@ -175,7 +175,7 @@ async function cmdInit(argv, options = {}) {
   const existingConfig = await readJson(configPath);
   const notifyPath = path.join(binDir, "notify.cjs");
   const appDir = path.join(trackerDir, "app");
-  const trackerBinPath = path.join(appDir, "bin", "token-pulse.js");
+  const trackerBinPath = path.join(appDir, "bin", "usagecairn.js");
 
   renderWelcome();
 
@@ -254,7 +254,7 @@ async function cmdInit(argv, options = {}) {
     firstSync = await runFirstSyncAndRead({
       trackerBinPath,
       trackerDir,
-      packageName: "token-pulse",
+      packageName: "usagecairn",
     });
   } catch (err) {
     const msg = err && err.message ? err.message : "unknown error";
@@ -279,7 +279,7 @@ function renderWelcome() {
     [
       ASCII_LOGO,
       "",
-      `${BOLD}Token Pulse${RESET}  ${color("Local-first usage across " + providerCount + " AI CLIs", DIM)}`,
+      `${BOLD}UsageCairn${RESET}  ${color("Local-first usage across " + providerCount + " AI CLIs", DIM)}`,
       DIVIDER,
       `${CYAN}Only token counts and metadata are uploaded when a private account is configured.${RESET}`,
       DIVIDER,
@@ -357,7 +357,7 @@ async function runSetup({
   return { summary, installedAt };
 }
 
-async function writeNotifyHandler({ trackerDir, binDir, notifyPath, packageName = "token-pulse" }) {
+async function writeNotifyHandler({ trackerDir, binDir, notifyPath, packageName = "usagecairn" }) {
   const resolvedNotifyPath =
     notifyPath || path.join(binDir || path.join(path.dirname(trackerDir), "bin"), "notify.cjs");
   await ensureDir(path.dirname(resolvedNotifyPath));
@@ -711,7 +711,7 @@ async function applyIntegrationSetup({
   }
 
   // Kimi: passive reader — no hook installation needed.
-  // TokenPulse reads both legacy ~/.kimi/ and official ~/.kimi-code/ sessions.
+  // UsageCairn reads both legacy ~/.kimi/ and official ~/.kimi-code/ sessions.
   {
     const kimiHome = process.env.KIMI_HOME || path.join(home, ".kimi");
     const kimiCodeHome = process.env.KIMI_CODE_HOME || path.join(home, ".kimi-code");
@@ -763,7 +763,7 @@ async function applyIntegrationSetup({
   }
 
   // pi (@mariozechner/pi-coding-agent): passive reader — no hook installation needed.
-  // TokenPulse reads ~/.pi/agent/sessions/**/*.jsonl directly. Skip when its
+  // UsageCairn reads ~/.pi/agent/sessions/**/*.jsonl directly. Skip when its
   // agent dir collides with omp's so the summary matches what sync will scan.
   if (!piAgentDirCollidesWithOmp(process.env)) {
     // Same win32 nullability as oh-my-pi above: resolvePiAgentDir is null when
@@ -800,7 +800,7 @@ async function applyIntegrationSetup({
   }
 
   // Craft Agents: passive reader — no hook installation needed.
-  // TokenPulse reads ~/.craft-agent/workspaces/<id>/sessions/**/session.jsonl
+  // UsageCairn reads ~/.craft-agent/workspaces/<id>/sessions/**/session.jsonl
   // (and any user-relocated workspace listed in ~/.craft-agent/config.json).
   {
     const craftConfigDir = process.env.CRAFT_CONFIG_DIR || path.join(home, ".craft-agent");
@@ -1020,7 +1020,7 @@ async function applyIntegrationSetup({
   const openclawInstall = await installOpenclawSessionPlugin({
     home,
     trackerDir,
-    packageName: "token-pulse",
+    packageName: "usagecairn",
     env: process.env,
   });
   if (openclawInstall?.skippedReason === "openclaw-cli-missing") {
@@ -1365,8 +1365,8 @@ function buildNotifyHandler({ trackerDir, packageName }) {
   // It must never block Codex; it spawns sync in the background and exits 0.
   const queueSignalPath = path.join(trackerDir, "notify.signal");
   const originalPath = path.join(trackerDir, "codex_notify_original.json");
-  const fallbackPkg = packageName || "token-pulse";
-  const trackerBinPath = path.join(trackerDir, "app", "bin", "token-pulse.js");
+  const fallbackPkg = packageName || "usagecairn";
+  const trackerBinPath = path.join(trackerDir, "app", "bin", "usagecairn.js");
 
   return `#!/usr/bin/env node
 'use strict';
@@ -1399,7 +1399,7 @@ const codexOriginalPath = ${JSON.stringify(originalPath)};
 const acodeOriginalPath = ${JSON.stringify(path.join(trackerDir, "acode_notify_original.json"))};
 const codeOriginalPath = ${JSON.stringify(path.join(trackerDir, "code_notify_original.json"))};
 const trackerBinPath = ${JSON.stringify(trackerBinPath)};
-  const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'token-pulse.js');
+  const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'usagecairn.js');
 const fallbackPkg = ${JSON.stringify(fallbackPkg)};
 const selfPath = path.resolve(__filename);
 const home = os.homedir();
@@ -2192,7 +2192,7 @@ async function installLocalTrackerApp({ appDir }) {
   // output belongs in the local runtime.
   const packageRoot = path.resolve(__dirname, "../..");
   const srcFrom = path.join(packageRoot, "src");
-  const binFrom = path.join(packageRoot, "bin", "token-pulse.js");
+  const binFrom = path.join(packageRoot, "bin", "usagecairn.js");
   const packageJsonFrom = path.join(packageRoot, "package.json");
   const nodeModulesFrom = path.join(packageRoot, "node_modules");
 
@@ -2204,7 +2204,7 @@ async function installLocalTrackerApp({ appDir }) {
 
   const srcTo = path.join(appDir, "src");
   const binToDir = path.join(appDir, "bin");
-  const binTo = path.join(binToDir, "token-pulse.js");
+  const binTo = path.join(binToDir, "usagecairn.js");
   const nodeModulesTo = path.join(appDir, "node_modules");
 
   await fs.rm(appDir, { recursive: true, force: true }).catch(() => {});
@@ -2245,7 +2245,7 @@ async function runFirstSyncAndRead({ trackerBinPath, trackerDir, packageName }) 
   if (process.env.TOKEN_PULSE_SKIP_FIRST_SYNC === "1") {
     return readFirstSyncTotals(trackerDir);
   }
-  const fallbackPkg = packageName || "token-pulse";
+  const fallbackPkg = packageName || "usagecairn";
   const argv = ["sync", "--auto"];
   const hasLocalRuntime = typeof trackerBinPath === "string" && fssync.existsSync(trackerBinPath);
   const cmd = hasLocalRuntime

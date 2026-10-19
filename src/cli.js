@@ -7,21 +7,21 @@ const { uploadQueue } = require('./commands/upload');
 const { resolveUploadConfig, defaultQueuePath } = require('./lib/upload-config');
 
 const HELP = [
-  'Token Pulse · local collector',
+  'UsageCairn · local collector',
   '',
-  '  token-pulse connect --api-url <url> --key <key>   Save Vercel upload credentials',
-  '  token-pulse connect --show | --clear              Inspect or remove them',
-  '  token-pulse init [--yes]                          Install collection hooks',
-  '  token-pulse sync                                  Collect usage (uploads when connected)',
-  '  token-pulse upload [--replay]                     Upload new usage (--replay: full ledger)',
-  '  token-pulse status                                Show hook status',
-  '  token-pulse uninstall [--purge]                   Remove hooks and local state',
+  '  usagecairn connect --api-url <url> --key <key>   Save Vercel upload credentials',
+  '  usagecairn connect --show | --clear              Inspect or remove them',
+  '  usagecairn init [--yes]                          Install collection hooks',
+  '  usagecairn sync                                  Collect usage (uploads when connected)',
+  '  usagecairn upload [--replay]                     Upload new usage (--replay: full ledger)',
+  '  usagecairn status                                Show hook status',
+  '  usagecairn uninstall [--purge]                   Remove hooks and local state',
 ].join('\n');
 
 async function uploadIfConfigured() {
   const config = resolveUploadConfig({ queuePath: defaultQueuePath() });
   if (config.invalid) {
-    console.error('Upload credentials are invalid; run: token-pulse connect --api-url <url> --key <key>');
+    console.error('Upload credentials are invalid; run: usagecairn connect --api-url <url> --key <key>');
     process.exitCode = 1;
     return null;
   }
@@ -49,7 +49,7 @@ async function run(argv) {
       return;
     }
     case 'upload': {
-      if (rest.length > 1 || (rest.length === 1 && rest[0] !== '--replay')) throw new Error('Usage: token-pulse upload [--replay]');
+      if (rest.length > 1 || (rest.length === 1 && rest[0] !== '--replay')) throw new Error('Usage: usagecairn upload [--replay]');
       const result = await uploadQueue({ replay: rest[0] === '--replay' });
       console.log(`Uploaded ${result.uploaded} usage snapshots (${result.pending} pending bytes).`);
       return;

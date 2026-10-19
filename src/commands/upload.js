@@ -61,11 +61,11 @@ async function uploadedOffset(queuePath, env = process.env) {
 async function uploadQueue({ queuePath = path.join(os.homedir(), '.token-pulse', 'tracker', 'queue.jsonl'),
   baseUrl, key, request = fetch, env = process.env, replay = false } = {}) {
   const config = resolveUploadConfig({ queuePath, env });
-  if (config.invalid) throw new Error('Stored upload credentials are invalid; run: token-pulse connect');
+  if (config.invalid) throw new Error('Stored upload credentials are invalid; run: usagecairn connect');
   const origin = baseUrl ? new URL(baseUrl).origin : config.apiUrl;
   const accessKey = key || config.accessKey;
-  if (!origin) throw new Error('Set TOKEN_PULSE_API_URL or run: token-pulse connect --api-url <url> --key <key>');
-  if (!accessKey) throw new Error('Set TOKEN_PULSE_ACCESS_KEY or run: token-pulse connect --api-url <url> --key <key>');
+  if (!origin) throw new Error('Set TOKEN_PULSE_API_URL or run: usagecairn connect --api-url <url> --key <key>');
+  if (!accessKey) throw new Error('Set TOKEN_PULSE_ACCESS_KEY or run: usagecairn connect --api-url <url> --key <key>');
   const deviceId = getOrCreateMachineId(queuePath);
   if (!deviceId) throw new Error('Cannot persist local device identity');
   const stat = await fs.stat(queuePath).catch((error) => {

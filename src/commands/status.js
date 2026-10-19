@@ -99,13 +99,13 @@ function renderText(status) {
   const upload = status.upload.configured
     ? `${status.upload.api_url} (${status.upload.source})`
     : status.upload.invalid
-      ? "invalid credentials (run: token-pulse connect)"
-      : "not configured (run: token-pulse connect)";
+      ? "invalid credentials (run: usagecairn connect)"
+      : "not configured (run: usagecairn connect)";
   const detected = Object.entries(status.providers || {})
     .filter(([, value]) => value.installed)
     .map(([name]) => name);
   return [
-    `TokenPulse v${status.version}`,
+    `UsageCairn v${status.version}`,
     "Status:",
     `- Upload: ${upload}`,
     `- Queue: ${formatBytes(status.queue.pending_bytes)} pending / ${formatBytes(status.queue.size_bytes)} total`,

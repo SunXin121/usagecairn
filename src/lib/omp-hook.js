@@ -52,10 +52,10 @@ function resolveTrackerBinDir(trackerDir) {
 function buildOmpNotifyExtensionSource({ notifyPath }) {
   const notifyLiteral = JSON.stringify(notifyPath);
   return `${MARKER}
-// TokenPulse notify bridge for oh-my-pi (omp).
+// UsageCairn notify bridge for oh-my-pi (omp).
 // Passive session scanning still works without this file; the extension only
 // makes local dashboard refresh near-real-time after each agent turn.
-// Managed by TokenPulse init/uninstall — do not hand-edit the marker line.
+// Managed by UsageCairn init/uninstall — do not hand-edit the marker line.
 
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
@@ -89,7 +89,7 @@ function spawnNotify() {
     if (!warnedMissing) {
       warnedMissing = true;
       console.warn(
-        "[token-pulse-notify] notify.cjs not found; expected ~/.token-pulse/bin/notify.cjs",
+        "[usagecairn-notify] notify.cjs not found; expected ~/.token-pulse/bin/notify.cjs",
       );
     }
     return;

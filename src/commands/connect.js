@@ -24,7 +24,7 @@ async function cmdConnect(argv, { queuePath = defaultQueuePath(), log = console.
   if (opts.show || (!opts.apiUrl && !opts.key)) {
     const stored = readUploadConfig(queuePath);
     if (!stored.apiUrl) {
-      log("No upload credentials stored. Run: token-pulse connect --api-url <url> --key <key>");
+      log("No upload credentials stored. Run: usagecairn connect --api-url <url> --key <key>");
       return { stored: false };
     }
     log(`API: ${stored.apiUrl}\nAccess key: ${stored.accessKey ? `tt_…${stored.accessKey.slice(-4)}` : "(missing)"}\nStored in ${configPathFor(queuePath)}`);

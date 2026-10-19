@@ -161,7 +161,7 @@ async function cmdUninstall(argv) {
           : codexRestore?.skippedReason === "no-backup-not-installed"
             ? "- Codex notify: skipped (no backup; not installed)"
             : codexRestore?.skippedReason === "current-not-managed"
-              ? "- Codex notify: skipped (current notify is not managed by TokenPulse)"
+              ? "- Codex notify: skipped (current notify is not managed by UsageCairn)"
             : "- Codex notify: no change"
         : "- Codex notify: skipped (config.toml not found)",
       acodeConfigExists
@@ -170,7 +170,7 @@ async function cmdUninstall(argv) {
           : acodeRestore?.skippedReason === "no-backup-not-installed"
             ? "- AStudio notify: skipped (no backup; not installed)"
             : acodeRestore?.skippedReason === "current-not-managed"
-              ? "- AStudio notify: skipped (current notify is not managed by TokenPulse)"
+              ? "- AStudio notify: skipped (current notify is not managed by UsageCairn)"
               : "- AStudio notify: no change"
         : "- AStudio notify: skipped (config.toml not found)",
       codeConfigExists
@@ -179,7 +179,7 @@ async function cmdUninstall(argv) {
           : codeRestore?.skippedReason === "no-backup-not-installed"
             ? "- Every Code notify: skipped (no backup; not installed)"
             : codeRestore?.skippedReason === "current-not-managed"
-              ? "- Every Code notify: skipped (current notify is not managed by TokenPulse)"
+              ? "- Every Code notify: skipped (current notify is not managed by UsageCairn)"
             : "- Every Code notify: no change"
         : "- Every Code notify: skipped (config.toml not found)",
       claudeConfigExists

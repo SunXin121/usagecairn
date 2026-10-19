@@ -4,7 +4,7 @@
 //
 // Agent harnesses run Codex / Claude Code with a private home
 // (CODEX_HOME=..., CLAUDE_CONFIG_DIR=...). Those sessions were invisible to
-// TokenPulse unless the sync happened to be spawned by a process that
+// UsageCairn unless the sync happened to be spawned by a process that
 // inherited the same environment: a hook-fired sync saw them, the native app's
 // background refresh did not. Worse, the two producers then disagreed about
 // where a rollout's cursor lives (the cursor store classifies a rollout as a

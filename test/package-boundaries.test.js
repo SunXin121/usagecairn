@@ -10,7 +10,7 @@ const root = path.resolve(__dirname, '..');
 
 test('npm collector excludes server runtime dependencies and pricing', async () => {
   const pkg = require('../package.json');
-  assert.equal(pkg.bin['token-pulse'], 'bin/token-pulse.js');
+  assert.equal(pkg.bin['usagecairn'], 'bin/usagecairn.js');
   assert.equal(pkg.dependencies.pg, undefined);
   assert.equal(pkg.dependencies['@mongodb-js/zstd'] !== undefined, true);
   assert.equal(await fs.stat(path.join(root, 'server/pricing/index.js')).then((s) => s.isFile()), true);
@@ -18,14 +18,14 @@ test('npm collector excludes server runtime dependencies and pricing', async () 
 });
 
 test('installed collector and notify hook use the published executable', async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'token-pulse-runtime-'));
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), 'usagecairn-runtime-'));
   const appDir = path.join(home, 'app');
   try {
     await installLocalTrackerApp({ appDir });
-    const executable = path.join(appDir, 'bin', 'token-pulse.js');
+    const executable = path.join(appDir, 'bin', 'usagecairn.js');
     assert.match(execFileSync(process.execPath, [executable, '--help'], { encoding: 'utf8' }), /local collector/);
-    const notify = buildNotifyHandler({ trackerDir: home, packageName: 'token-pulse' });
-    assert.match(notify, /app.*bin.*token-pulse\.js/);
+    const notify = buildNotifyHandler({ trackerDir: home, packageName: 'usagecairn' });
+    assert.match(notify, /app.*bin.*usagecairn\.js/);
     assert.doesNotMatch(notify, /tracker\.js/);
   } finally {
     await fs.rm(home, { recursive: true, force: true });

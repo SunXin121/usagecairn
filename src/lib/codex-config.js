@@ -26,7 +26,7 @@ function buildAcodeNotifyCmd(notifyPath, options) {
 // Is this notify command one we wrote? Strict array equality is not a safe
 // test, because the command is not a stable constant across invocations:
 //   - argv[0] on Windows is an absolute `process.execPath` (#361). The desktop
-//     app runs the bundled EmbeddedServer\node.exe, `token-pulse` in a
+//     app runs the bundled EmbeddedServer\node.exe, `usagecairn` in a
 //     terminal runs the system / nvm Node, and an nvm version switch moves it
 //     again. All three write a different argv[0] on the same machine.
 //   - the notify.cjs path itself varies with binDir (npm global vs embedded).

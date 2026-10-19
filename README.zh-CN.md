@@ -1,8 +1,8 @@
-# Token Pulse
+# UsageCairn
 
 [English](README.md) · [MIT 许可证](LICENSE)
 
-Token Pulse 在你的电脑上读取 AI Agent 的用量记录，将 **token 计数与必要的统计元数据** 上传到你自己部署的服务，并通过网页看板按日期、来源和模型查看用量及估算费用。它不会把提示词、回复正文或完整会话上传到服务端。部署为单用户模式：没有注册系统，采集端和看板共用一个私有访问密钥。
+UsageCairn 在你的电脑上读取 AI Agent 的用量记录，将 **token 计数与必要的统计元数据** 上传到你自己部署的服务，并通过网页看板按日期、来源和模型查看用量及估算费用。它不会把提示词、回复正文或完整会话上传到服务端。部署为单用户模式：没有注册系统，采集端和看板共用一个私有访问密钥。
 
 ## 架构概览
 
@@ -24,7 +24,7 @@ Vercel /api/ingest → PostgreSQL → /api/usage → 浏览器看板
 
 ## 1. 部署服务端与看板
 
-1. 将本仓库导入 Vercel（[一键部署](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenPulse&project-name=token-pulse&repository-name=token-pulse&env=ACCESS_KEY) 或 Vercel **New Project → Import Git Repository**）。保持仓库根目录作为项目根目录；`vercel.json` 已设置依赖安装、`dashboard` 构建、静态页面和 `/api/*` 函数。首次部署时数据库尚未连接，API 暂不可用是正常的。
+1. 将本仓库导入 Vercel（[一键部署](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2Fusagecairn&project-name=usagecairn&repository-name=usagecairn&env=ACCESS_KEY) 或 Vercel **New Project → Import Git Repository**）。保持仓库根目录作为项目根目录；`vercel.json` 已设置依赖安装、`dashboard` 构建、静态页面和 `/api/*` 函数。首次部署时数据库尚未连接，API 暂不可用是正常的。
 2. 在 Vercel 的 **Settings → Environment Variables** 设置仅供服务端使用的 `ACCESS_KEY`。建议在本机生成随机密钥并妥善保存：
 
    ```bash
@@ -46,18 +46,19 @@ Vercel /api/ingest → PostgreSQL → /api/usage → 浏览器看板
 无需全局安装；在**使用 Agent 的那台电脑**上执行（不要在 Vercel 中执行）：
 
 ```bash
-npx token-pulse@latest init --dry-run                 # 可选：预览将配置的集成
-npx token-pulse@latest init --yes                     # 安装钩子并尝试首次同步
-npx token-pulse@latest connect --api-url https://your-project.vercel.app --key '你在 Vercel 设置的密钥'
-npx token-pulse@latest sync                           # 扫描全部受支持来源并上传
-npx token-pulse@latest status                         # 核查上传配置、队列积压和解析时间
+npx usagecairn@latest init --dry-run                 # 可选：预览将配置的集成
+npx usagecairn@latest init --yes                     # 安装钩子并尝试首次同步
+npx usagecairn@latest connect --api-url https://your-project.vercel.app --key '你在 Vercel 设置的密钥'
+npx usagecairn@latest sync                           # 扫描全部受支持来源并上传
+npx usagecairn@latest status                         # 核查上传配置、队列积压和解析时间
 ```
 
 将示例域名和密钥换成自己的值。`--api-url` 必须是 **HTTPS 站点根地址**（开发时允许 `http://localhost` / `127.0.0.1`），不要附加 `/api/ingest`、路径或查询参数。`init` 会修改已检测到的部分 Agent 的 hook/plugin 配置；建议先运行 `--dry-run`，尤其是已有自定义钩子时。部分来源无需钩子，直接由 `sync` 读取；`init` 会尝试首次同步，因此如果先 `init` 再 `connect`，初次同步只会保存在本地，之后执行 `sync` 即可上传。
 
-如果更愿意全局安装，可运行 `npm install -g token-pulse`，然后将上述 `npx token-pulse@latest` 换成 `token-pulse`。从源码运行采集端则用 `npm ci` 后执行 `node bin/token-pulse.js init --yes`、`node bin/token-pulse.js sync` 等。
+如果更愿意全局安装，可运行 `npm install -g usagecairn`，然后将上述 `npx usagecairn@latest` 换成 `usagecairn`。从源码运行采集端则用 `npm ci` 后执行 `node bin/usagecairn.js init --yes`、`node bin/usagecairn.js sync` 等。
 
 安装目录：`~/.token-pulse/tracker/app/` 是 `init` 复制的运行时代码与运行依赖，`~/.token-pulse/bin/notify.cjs` 是钩子入口；钩子优先通过 Node.js 运行本地副本，不依赖 npx 缓存，仅当本地副本不存在时才回退到 npx。`~/.token-pulse/tracker/` 还保存解析游标、`queue.jsonl` 本地统计账本和上传进度。`connect` 将站点地址与**原始密钥**写入 `~/.token-pulse/tracker/upload.json`（尽可能使用 600 权限），请保护本机账户与该文件。按次设置 `TOKEN_PULSE_API_URL` / `TOKEN_PULSE_ACCESS_KEY` 可覆盖已保存的配置；无需修改 shell 配置即可让后台钩子使用保存的密钥。Windows 上 `~` 指当前用户主目录，文件权限遵循操作系统权限机制。
+兼容旧版安装：继续使用 `~/.token-pulse`、`TOKEN_PULSE_*` 环境变量和 `token-pulse-theme` 浏览器偏好键，避免升级时丢失队列、解析游标、凭据或主题设置；`uninstall --purge` 会永久删除本地状态。
 
 | 命令 | 用途 |
 | --- | --- |
@@ -99,7 +100,7 @@ npx token-pulse@latest status                         # 核查上传配置、队
 
 ## 更新与源码验证
 
-Vercel 连接仓库后，向 `main` 推送代码可触发自动部署；推送 `v*` 标签触发 npm 发布工作流（需要仓库 `NPM_TOKEN` secret，未配置时跳过）。更新采集端可重新运行 `npx token-pulse@latest init --yes` 以刷新钩子使用的本地运行时。源码检查：
+Vercel 连接仓库后，向 `main` 推送代码可触发自动部署；推送 `v*` 标签触发 npm 发布工作流（需要仓库 `NPM_TOKEN` secret，未配置时跳过）。更新采集端可重新运行 `npx usagecairn@latest init --yes` 以刷新钩子使用的本地运行时。源码检查：
 
 ```bash
 npm ci

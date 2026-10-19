@@ -1,8 +1,8 @@
-# Token Pulse
+# UsageCairn
 
 [简体中文](README.zh-CN.md) · [MIT License](LICENSE)
 
-Token Pulse collects AI agent token usage on your machine, uploads **counts and statistical metadata** to a server you deploy, and displays usage and estimated cost by date, source, and model. It does not upload prompts, assistant replies, or full transcripts. This is a single-user deployment: one private access key protects both the collector and the dashboard; there are no user accounts.
+UsageCairn collects AI agent token usage on your machine, uploads **counts and statistical metadata** to a server you deploy, and displays usage and estimated cost by date, source, and model. It does not upload prompts, assistant replies, or full transcripts. This is a single-user deployment: one private access key protects both the collector and the dashboard; there are no user accounts.
 
 ## How the pieces fit together
 
@@ -24,7 +24,7 @@ You can collect usage locally without deploying anything: skip `connect` and run
 
 ## 1. Deploy the server and dashboard
 
-1. Import this repository into Vercel using [one-click deploy](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2FTokenPulse&project-name=token-pulse&repository-name=token-pulse&env=ACCESS_KEY) or **New Project → Import Git Repository**. Use the repository root as the project root. `vercel.json` defines installation, the `dashboard` build, static routing, and `/api/*` functions. The API may not work until you connect and initialize the database.
+1. Import this repository into Vercel using [one-click deploy](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FSunXin121%2Fusagecairn&project-name=usagecairn&repository-name=usagecairn&env=ACCESS_KEY) or **New Project → Import Git Repository**. Use the repository root as the project root. `vercel.json` defines installation, the `dashboard` build, static routing, and `/api/*` functions. The API may not work until you connect and initialize the database.
 2. Set `ACCESS_KEY` in **Settings → Environment Variables** as a **server-only** secret. Generate and save a strong value locally:
 
    ```bash
@@ -48,18 +48,19 @@ The API exposes `POST /api/ingest` and `GET /api/usage`; both require `Authoriza
 Run these commands **on the machine where your agents run**, not in Vercel. No global npm installation is required:
 
 ```bash
-npx token-pulse@latest init --dry-run                 # optional: preview integrations
-npx token-pulse@latest init --yes                     # install hooks and try the first sync
-npx token-pulse@latest connect --api-url https://your-project.vercel.app --key 'your access key'
-npx token-pulse@latest sync                           # scan all supported sources and upload
-npx token-pulse@latest status                         # check destination, backlog, and last parse
+npx usagecairn@latest init --dry-run                 # optional: preview integrations
+npx usagecairn@latest init --yes                     # install hooks and try the first sync
+npx usagecairn@latest connect --api-url https://your-project.vercel.app --key 'your access key'
+npx usagecairn@latest sync                           # scan all supported sources and upload
+npx usagecairn@latest status                         # check destination, backlog, and last parse
 ```
 
 Replace the example site and key. `--api-url` must be the **HTTPS site origin**, without `/api/ingest`, another path, or query parameters (`http://localhost` and `127.0.0.1` are accepted for local development). `init` changes hook/plugin configurations for detected agents, so preview with `--dry-run` if you have custom hooks. Other agents are read passively by `sync`. Because `init` attempts an initial sync, running `init` before `connect` stores that first snapshot locally; the subsequent `sync` uploads it.
 
-For a global command use `npm install -g token-pulse` and replace `npx token-pulse@latest` above with `token-pulse`. To run the collector from this checkout, run `npm ci`, then `node bin/token-pulse.js init --yes`, `node bin/token-pulse.js sync`, etc.
+For a global command use `npm install -g usagecairn` and replace `npx usagecairn@latest` above with `usagecairn`. To run the collector from this checkout, run `npm ci`, then `node bin/usagecairn.js init --yes`, `node bin/usagecairn.js sync`, etc.
 
 `init` copies the runtime and its production dependencies into `~/.token-pulse/tracker/app/` and writes a dependency-free hook entry point at `~/.token-pulse/bin/notify.cjs`. Hooks run that local copy through Node.js, without relying on the npx cache; npx is a fallback if the local runtime is missing. Parser cursors, the aggregated `queue.jsonl` ledger, and upload progress live in `~/.token-pulse/tracker/`. `connect` saves the **raw access key** and URL to `~/.token-pulse/tracker/upload.json` (mode 600 where supported); protect your local account and this file. `TOKEN_PULSE_API_URL` and `TOKEN_PULSE_ACCESS_KEY` override saved credentials for an invocation. Saved credentials let background hooks upload without shell-profile changes. On Windows, `~` means your user home and file permissions follow the OS.
+For existing installations, the legacy `~/.token-pulse` state directory, `TOKEN_PULSE_*` environment overrides, and `token-pulse-theme` browser preference key remain in use so upgrades do not strand queued usage, parser cursors, saved credentials, or theme settings. Keep this directory when updating; `uninstall --purge` permanently removes it.
 
 | Command | Purpose |
 | --- | --- |
@@ -101,7 +102,7 @@ Raw agent logs stay in their original directories. The local `~/.token-pulse/tra
 
 ## Updates and development checks
 
-With Vercel's Git integration, pushes to `main` redeploy the server. Pushing a `v*` tag invokes the npm publish workflow (requires the repository's `NPM_TOKEN` secret; without it publication is skipped). Rerun `npx token-pulse@latest init --yes` after updating the collector to refresh the hook's local runtime. Check the source locally with:
+With Vercel's Git integration, pushes to `main` redeploy the server. Pushing a `v*` tag invokes the npm publish workflow (requires the repository's `NPM_TOKEN` secret; without it publication is skipped). Rerun `npx usagecairn@latest init --yes` after updating the collector to refresh the hook's local runtime. Check the source locally with:
 
 ```bash
 npm ci

@@ -19,7 +19,7 @@ const {
   parseAnythingllmIncremental,
 } = require("../src/lib/rollout");
 
-const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
+const TRACKER = path.resolve(__dirname, "..", "bin", "usagecairn.js");
 
 function createAnythingllmDb() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "anythingllm-test-"));

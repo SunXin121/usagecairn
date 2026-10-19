@@ -27,7 +27,7 @@ const {
 } = require("../src/lib/rollout");
 const { computeRowCost } = require("../server/pricing");
 
-const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
+const TRACKER = path.resolve(__dirname, "..", "bin", "usagecairn.js");
 
 function executeSql(dbPath, sql) {
   if (typeof DatabaseSync === "function") {

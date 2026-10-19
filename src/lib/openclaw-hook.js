@@ -33,7 +33,7 @@ function resolveOpenclawHookPaths({ home = os.homedir(), trackerDir, env = proce
 async function installOpenclawHook({
   home = os.homedir(),
   trackerDir,
-  packageName = "token-pulse",
+  packageName = "usagecairn",
   env = process.env,
 } = {}) {
   const paths = resolveOpenclawHookPaths({ home, trackerDir, env });
@@ -64,7 +64,7 @@ async function installOpenclawHook({
 async function ensureOpenclawHookFiles({
   hookDir,
   trackerDir,
-  packageName = "token-pulse",
+  packageName = "usagecairn",
   openclawHome,
 } = {}) {
   if (!hookDir || !trackerDir) throw new Error("hookDir and trackerDir are required");
@@ -226,20 +226,20 @@ async function removeOpenclawHookConfig({
 function buildHookMarkdown() {
   return `---
 name: ${OPENCLAW_HOOK_NAME}
-description: "Trigger token-pulse sync when OpenClaw sessions roll over"
+description: "Trigger usagecairn sync when OpenClaw sessions roll over"
 metadata:
   { "openclaw": { "emoji": "📈", "events": ["command:new", "command:reset", "command:stop"], "requires": { "bins": ["node"] } } }
 ---
 
-# TokenPulse OpenClaw Sync Hook
+# UsageCairn OpenClaw Sync Hook
 
-Triggers non-blocking 'token-pulse sync --auto --from-openclaw' runs when OpenClaw command events indicate session rollover/reset/stop.
+Triggers non-blocking 'usagecairn sync --auto --from-openclaw' runs when OpenClaw command events indicate session rollover/reset/stop.
 `;
 }
 
-function buildHookHandler({ trackerDir, packageName = "token-pulse", openclawHome }) {
-  const trackerBinPath = path.join(trackerDir, "app", "bin", "token-pulse.js");
-  const fallbackPkg = packageName || "token-pulse";
+function buildHookHandler({ trackerDir, packageName = "usagecairn", openclawHome }) {
+  const trackerBinPath = path.join(trackerDir, "app", "bin", "usagecairn.js");
+  const fallbackPkg = packageName || "usagecairn";
   const safeOpenclawHome = openclawHome || path.join(os.homedir(), ".openclaw");
 
   return (
@@ -252,7 +252,7 @@ function buildHookHandler({ trackerDir, packageName = "token-pulse", openclawHom
     `const fallbackPkg = ${JSON.stringify(fallbackPkg)};\n` +
     `const openclawHome = ${JSON.stringify(safeOpenclawHome)};\n` +
     `const throttlePath = path.join(trackerDir, 'openclaw.sync.throttle');\n` +
-    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'token-pulse.js');\n` +
+    `const depsMarkerPath = path.join(trackerDir, 'app', 'bin', 'usagecairn.js');\n` +
     `const THROTTLE_MS = 15_000;\n` +
     `\n` +
     `module.exports = async function handler(event) {\n` +

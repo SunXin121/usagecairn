@@ -7,7 +7,7 @@ const os = require("node:os");
 const path = require("node:path");
 const cp = require("node:child_process");
 
-const TRACKER = path.resolve(__dirname, "..", "bin", "token-pulse.js");
+const TRACKER = path.resolve(__dirname, "..", "bin", "usagecairn.js");
 
 const {
   resolveLmstudioHome,

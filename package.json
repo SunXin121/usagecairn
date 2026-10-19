@@ -1,14 +1,14 @@
 {
-  "name": "token-pulse",
+  "name": "usagecairn",
   "version": "1.0.0",
   "description": "Local AI token usage collector with a PostgreSQL-backed web dashboard",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SunXin121/token-pulse.git"
+    "url": "git+https://github.com/SunXin121/usagecairn.git"
   },
-  "homepage": "https://github.com/SunXin121/token-pulse#readme",
+  "homepage": "https://github.com/SunXin121/usagecairn#readme",
   "bugs": {
-    "url": "https://github.com/SunXin121/token-pulse/issues"
+    "url": "https://github.com/SunXin121/usagecairn/issues"
   },
   "keywords": [
     "tokens",
@@ -21,7 +21,7 @@
   ],
   "main": "src/cli.js",
   "bin": {
-    "token-pulse": "bin/token-pulse.js"
+    "usagecairn": "bin/usagecairn.js"
   },
   "files": [
     "bin/",
