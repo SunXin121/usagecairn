@@ -92,6 +92,8 @@ const {
   resolvePiSessionFiles,
   parsePiIncremental,
   piAgentDirCollidesWithOmp,
+  resolvePiDesktopSessionFiles,
+  parsePiDesktopIncremental,
   resolvePrimeAgentSessionFiles,
   parsePrimeAgentIncremental,
   resolveMinimaxCodeSessionFiles,
@@ -322,6 +324,7 @@ const AUTO_SYNC_SOURCES = new Set([
   "opencode",
   "openclaw",
   "pi",
+  "pi-desktop",
   "qoder",
   "qoder-cn",
   "reasonix",
@@ -2510,6 +2513,29 @@ async function cmdSync(argv, context = {}) {
       }
     }
 
+    // ── PI-Desktop — passive ~/.pi-desktop/sessions/*.jsonl metadata reader ──
+    let piDesktopResult = { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
+    const piDesktopFiles = sourceAllowed("pi-desktop")
+      ? resolvePiDesktopSessionFiles(process.env)
+      : [];
+    if (piDesktopFiles.length > 0) {
+      if (progress?.enabled) progress.start(`Parsing PI-Desktop ${renderBar(0)} | buckets 0`);
+      try {
+        piDesktopResult = await parsePiDesktopIncremental({
+          sessionFiles: piDesktopFiles,
+          cursors,
+          queuePath,
+          onProgress: (p) => {
+            if (!progress?.enabled) return;
+            const pct = p.total > 0 ? p.index / p.total : 1;
+            progress.update(`Parsing PI-Desktop ${renderBar(pct)} ${formatNumber(p.index)}/${formatNumber(p.total)} files | buckets ${formatNumber(p.bucketsQueued)}`);
+          },
+        });
+      } catch (err) {
+        warnProviderParseFailure("PI-Desktop", err, opts);
+      }
+    }
+
     // ── Prime Agent — passive ~/.prime/agent/sessions/*.jsonl usage reader ──
     let primeAgentResult = { recordsProcessed: 0, eventsAggregated: 0, bucketsQueued: 0 };
     const primeAgentFiles = sourceAllowed("prime-agent")
@@ -3063,6 +3089,7 @@ async function cmdSync(argv, context = {}) {
       ompResult.recordsProcessed +
       omoResult.recordsProcessed +
       piResult.recordsProcessed +
+      piDesktopResult.recordsProcessed +
       primeAgentResult.recordsProcessed +
       minimaxCodeResult.recordsProcessed +
       craftResult.recordsProcessed +
@@ -3110,6 +3137,7 @@ async function cmdSync(argv, context = {}) {
       ompResult.bucketsQueued +
       omoResult.bucketsQueued +
       piResult.bucketsQueued +
+      piDesktopResult.bucketsQueued +
       primeAgentResult.bucketsQueued +
       minimaxCodeResult.bucketsQueued +
       craftResult.bucketsQueued +

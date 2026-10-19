@@ -85,7 +85,7 @@ npx usagecairn@latest status                         # 核查上传配置、队�
 | 接入方式 | Agent / 工具 | 说明 |
 | --- | --- | --- |
 | `init` 可安装钩子或插件；也可扫描已有记录 | Claude Code、Codex CLI、AStudio、Every Code、Gemini CLI、OpenCode、OpenClaw、Grok Build、oh-my-pi (omp)、CodeBuddy、WorkBuddy、WorkBuddy AI | 有事件时触发后台同步；OpenClaw 的 session plugin 安装后需重启 gateway；`sync` 可补扫相关本地数据 |
-| 被动读取本地会话/数据库/遥测 | Antigravity、Kiro、Hermes Agent、GitHub Copilot、Kimi Code、OmO、pi、Prime Agent、Craft Agents、Reasonix、Muse Code、Kilo CLI、Kilo Code、Roo Code、Zed Agent、Goose、Droid、Mimo、DuMate、ZCode、Qoder（含 CN）、AnythingLLM Desktop、Claude Science、DeepSeek Harness、TRAE、LM Studio、Unsloth Studio、Devin CLI、Cline、MiniMax Code、Command Code | 不依赖上述钩子；主动运行 `sync` 才能确保扫描新数据。Kiro、Copilot 等有多种本地格式，采集范围取决于已安装版本 |
+| 被动读取本地会话/数据库/遥测 | Antigravity、Kiro、Hermes Agent、GitHub Copilot、Kimi Code、OmO、pi、PI-Desktop、Prime Agent、Craft Agents、Reasonix、Muse Code、Kilo CLI、Kilo Code、Roo Code、Zed Agent、Goose、Droid、Mimo、DuMate、ZCode、Qoder（含 CN）、AnythingLLM Desktop、Claude Science、DeepSeek Harness、TRAE、LM Studio、Unsloth Studio、Devin CLI、Cline、MiniMax Code、Command Code | 不依赖上述钩子；主动运行 `sync` 才能确保扫描新数据。PI-Desktop 从 `~/.pi-desktop/sessions/*.jsonl` 读取用量元数据，独立于 pi 来源统计。Kiro、Copilot 等有多种本地格式，采集范围取决于已安装版本 |
 | 调用供应商用量接口 | Cursor、TRAE Work CN | Cursor 需本机已登录；TRAE Work CN 需自行设置 `TOKEN_PULSE_TRAE_CN_USAGE=1` 才会使用本地登录凭据读取近 30 天用量，默认**不**发起该请求 |
 
 名称 `pi` 与 `oh-my-pi` 分开统计；Kilo CLI 与 Kilo Code 扩展也是不同来源。集成状态可参考 `init --dry-run` 的输出；被动来源并非都会出现在安装摘要或 `status` 中。钩子只在相应工具有事件时触发，因此被动来源或历史数据需要定期手动 `sync`（可自行配置系统定时任务）。

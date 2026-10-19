@@ -71,6 +71,7 @@ const {
   resolveOmpAgentDir,
   resolvePiAgentDir,
   piAgentDirCollidesWithOmp,
+  resolvePiDesktopSessionFiles,
   resolvePrimeAgentDir,
   resolveMinimaxCodeSessionsDir,
   resolveCommandCodeHome,
@@ -133,6 +134,7 @@ const SUPPORTED_PROVIDERS = [
   "oh-my-pi",
   "OmO",
   "pi",
+  "PI-Desktop",
   "Dots",
   "Prime Agent",
   "Craft Agents",
@@ -772,6 +774,10 @@ async function applyIntegrationSetup({
     if (piAgentDir && fssync.existsSync(path.join(piAgentDir, "sessions"))) {
       summary.push({ label: "pi", status: "detected", detail: "Passive reader (no hook needed)" });
     }
+  }
+
+  if (resolvePiDesktopSessionFiles(process.env).length > 0) {
+    summary.push({ label: "PI-Desktop", status: "detected", detail: "Passive usage reader (no hook needed)" });
   }
 
   // Prime Agent: metadata-only passive reader — no hook installation needed.

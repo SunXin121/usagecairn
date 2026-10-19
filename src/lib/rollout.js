@@ -17272,6 +17272,65 @@ async function parsePiIncremental(options = {}) {
   });
 }
 
+// PI-Desktop stores flat session JSONL under ~/.pi-desktop/sessions. Its
+// assistant usage is metadata (not pi CLI's message.usage); never read blocks.
+function resolvePiDesktopSessionFiles(env = process.env) {
+  const home = env.TOKEN_PULSE_PI_DESKTOP_HOME
+    ? expandHomePath(env.TOKEN_PULSE_PI_DESKTOP_HOME, env)
+    : path.join(env.HOME || require("node:os").homedir(), ".pi-desktop");
+  if (!home) return [];
+  const dir = path.join(home, "sessions");
+  try {
+    return fssync.readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".jsonl") && !entry.name.endsWith(".revisions.jsonl"))
+      .map((entry) => path.join(dir, entry.name))
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return [];
+  }
+}
+
+function readPiDesktopUsageEntry(entry) {
+  if (entry?.type !== "message" || entry.role !== "assistant") return null;
+  const meta = entry.meta;
+  const usage = meta?.usage;
+  if (!usage || typeof usage !== "object" || meta.status === "error") return null;
+  // Output already contains reasoning; supply a fallback that does not add it twice.
+  const totalTokens = Number(usage.totalTokens) > 0
+    ? usage.totalTokens
+    : toNonNegativeInt(usage.inputTokens) + toNonNegativeInt(usage.outputTokens)
+      + toNonNegativeInt(usage.cacheReadTokens) + toNonNegativeInt(usage.cacheWriteTokens);
+  return {
+    id: entry.id,
+    timestamp: entry.createdAt,
+    message: {
+      role: "assistant",
+      model: usage.modelId || meta.modelId,
+      usage: {
+        input: usage.inputTokens,
+        output: usage.outputTokens,
+        cacheRead: usage.cacheReadTokens,
+        cacheWrite: usage.cacheWriteTokens,
+        reasoningTokens: usage.reasoningTokens,
+        totalTokens,
+      },
+    },
+  };
+}
+
+async function parsePiDesktopIncremental(options = {}) {
+  return parsePiLikeIncremental({
+    ...options,
+    stateKey: "piDesktop",
+    resolveSessionFiles: resolvePiDesktopSessionFiles,
+    resolveDefaultModel: () => "pi-desktop-unknown",
+    sourceForProvider: () => "pi-desktop",
+    readEntry: readPiDesktopUsageEntry,
+    // PI-Desktop's session header has no cwd; do not attribute it to a project.
+    projectQueuePath: undefined,
+  });
+}
+
 async function parsePrimeAgentIncremental(options = {}) {
   return parsePiLikeIncremental({
     ...options,
@@ -25822,6 +25881,8 @@ module.exports = {
   resolvePiSessionFiles,
   resolvePiDefaultModel,
   parsePiIncremental,
+  resolvePiDesktopSessionFiles,
+  parsePiDesktopIncremental,
   piAgentDirCollidesWithOmp,
   omoAgentDirCollidesWithOmp,
   resolvePrimeAgentHome,
