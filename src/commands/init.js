@@ -74,7 +74,6 @@ const {
   resolvePiDesktopSessionFiles,
   resolvePrimeAgentDir,
   resolveMinimaxCodeSessionsDir,
-  resolveCommandCodeHome,
   resolveLmstudioLogFiles,
   resolveUnslothDbPath,
   resolveAnythingllmDbPath,
@@ -94,6 +93,7 @@ const {
   promptMenu,
   createSpinner,
 } = require("../lib/cli-ui");
+const { detectPassiveSources } = require("../lib/init-passive-sources");
 const { renderLocalReport } = require("../lib/init-flow");
 
 const ASCII_LOGO = [
@@ -807,14 +807,6 @@ async function applyIntegrationSetup({
     }
   }
 
-  // Command Code (`cmd`): passive reader of ~/.commandcode/projects — no hook
-  // installation needed, and none exists to install.
-  {
-    const commandCodeProjectsDir = path.join(resolveCommandCodeHome(process.env), "projects");
-    if (fssync.existsSync(commandCodeProjectsDir)) {
-      summary.push({ label: "Command Code", status: "detected", detail: "Passive session reader (no hook needed)" });
-    }
-  }
 
   // Craft Agents: passive reader — no hook installation needed.
   // UsageCairn reads ~/.craft-agent/workspaces/<id>/sessions/**/session.jsonl
@@ -989,6 +981,8 @@ async function applyIntegrationSetup({
       });
     }
   }
+
+  summary.push(...await detectPassiveSources({ home, env: process.env }));
 
   // CodeBuddy: Claude-Code fork. Install the SessionEnd hook so finished
   // sessions trigger notify.cjs → tracker sync; passive scan still runs as a

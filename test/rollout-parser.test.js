@@ -9431,6 +9431,8 @@ test("resolveKiroCliSessionFiles discovers Kiro CLI 2.13 messages.jsonl sessions
 
 test("parseKiroCliIncremental parses Kiro CLI 2.13 event sessions with per-turn model and reasoning attribution", async () => {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "tt-kirocli-v2-"));
+  // Keep rewritten turns inside the parser's 90-day cursor retention window.
+  const sessionDay = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   try {
     const sessionDir = path.join(
       tmp,
@@ -9565,7 +9567,7 @@ test("parseKiroCliIncremental parses Kiro CLI 2.13 event sessions with per-turn 
         messagesPath,
         events
           .map((event) =>
-            typeof event === "string" ? event : JSON.stringify(event),
+            typeof event === "string" ? event : JSON.stringify(event).replaceAll("2026-07-22", sessionDay),
           )
           .join("\n") + "\n",
       );
@@ -9613,7 +9615,7 @@ test("parseKiroCliIncremental parses Kiro CLI 2.13 event sessions with per-turn 
     assert.equal(firstCredits.record_count, 2);
     assert.equal(firstCredits.session_count, 1);
     assert.equal(firstCredits.file_count, 1);
-    assert.equal(firstCredits.latest_at, "2026-07-22T03:25:03.000Z");
+    assert.equal(firstCredits.latest_at, `${sessionDay}T03:25:03.000Z`);
     // POSIX mode bits do not describe Windows NTFS access permissions.
     if (process.platform !== "win32") {
       assert.equal((await fs.stat(creditsPath)).mode & 0o777, 0o600);
