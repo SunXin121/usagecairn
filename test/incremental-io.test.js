@@ -35,11 +35,15 @@ test('upload persists each acknowledged batch and only reads the appended tail',
   const statePath = path.join(path.dirname(queuePath), 'upload.state.json');
   assert.equal((await fs.stat(statePath)).mode & 0o777, 0o600);
   assert.equal((await fs.readFile(statePath, 'utf8')).includes(keyA), false);
+  assert.equal(calls[0].hourly.length, 20, 'first acknowledged batch is bounded');
+  assert.equal(calls[1].hourly[0].model, 'model-21', 'failed batch begins after the saved offset');
   assert.equal((await uploadQueue({ ...options, request: async (_url, opts) => {
     calls.push(JSON.parse(opts.body)); return { ok: true, status: 200 };
-  } })).uploaded, 1);
-  assert.equal(calls.length, 3);
-  assert.equal(calls[2].hourly[0].model, 'model-201');
+  } })).uploaded, 181);
+  assert.equal(calls.length, 12);
+  assert.equal(calls[2].hourly[0].model, 'model-21', 'retry resumes at the failed batch');
+  assert.equal(calls[2].hourly.length, 20);
+  assert.equal(calls.at(-1).hourly[0].model, 'model-201');
   assert.deepEqual(await uploadQueue(options), { uploaded: 0, pending: 0 });
   await fs.appendFile(queuePath, entry(202));
   assert.deepEqual(await uploadQueue(options), { uploaded: 1, pending: 0 });
