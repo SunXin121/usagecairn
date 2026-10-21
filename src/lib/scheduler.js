@@ -68,8 +68,19 @@ function schedulerSpec({ home = os.homedir(), platform = process.platform, inter
     };
   }
   if (platform === "win32") {
-    return { platform, intervalMinutes, files: [],
-      taskCommand: [nodePath, trackerBinPath].map((arg) => `"${arg}"`).join(" ") + ` ${ARGS.join(" ")}` };
+    // Keep the launcher outside app/, which init replaces when updating the runtime.
+    const scriptPath = path.join(path.dirname(trackerBinPath), "..", "..", "usagecairn-sync.vbs");
+    const command = [nodePath, trackerBinPath].map((arg) => `"${arg}"`).join(" ") + ` ${ARGS.join(" ")}`;
+    return {
+      platform, intervalMinutes, scriptPath,
+      files: [{ path: scriptPath, content: [
+        `' ${MARKER}`,
+        "Dim exitCode",
+        `exitCode = CreateObject("WScript.Shell").Run("${command.replace(/"/g, '""')}", 0, True)`,
+        "WScript.Quit exitCode", "",
+      ].join("\r\n") }],
+      taskCommand: `wscript.exe //B //Nologo "${scriptPath}"`,
+    };
   }
   return null;
 }
@@ -86,6 +97,15 @@ async function readOwnedFiles(spec) {
   return { count };
 }
 
+function isOwnedWindowsTask(xml, spec) {
+  // Accept the old direct-node task so a later init can migrate it.
+  if (xml.includes("usagecairn.js") && xml.includes("--all-local-sources")) return true;
+  const decoded = xml.replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  return decoded.toLowerCase().includes("wscript.exe") &&
+    decoded.toLowerCase().includes(spec.scriptPath.toLowerCase());
+}
+
 async function installScheduler({ home = os.homedir(), platform = process.platform, trackerBinPath,
   intervalMinutes = DEFAULT_INTERVAL_MINUTES, deps = {} } = {}) {
   const exec = deps.exec || run;
@@ -97,10 +117,13 @@ async function installScheduler({ home = os.homedir(), platform = process.platfo
     }
     if (platform === "win32") {
       const existing = await exec("schtasks", ["/Query", "/TN", TASK_NAME, "/XML"]);
-      if (existing.ok && (!existing.stdout.includes("usagecairn.js") ||
-          !existing.stdout.includes("--all-local-sources"))) {
+      if (existing.ok && !isOwnedWindowsTask(existing.stdout, spec)) {
         return { installed: false, reason: "unmanaged-task" };
       }
+      const owned = await readOwnedFiles(spec);
+      if (owned.conflict) return { installed: false, reason: "unmanaged-file", path: owned.conflict };
+      await fs.mkdir(path.dirname(spec.scriptPath), { recursive: true });
+      await fs.writeFile(spec.scriptPath, spec.files[0].content, { encoding: "utf8", mode: 0o600 });
       // Do not use /F when the task is absent (or the query failed): an
       // unexpected existing task must never be silently overwritten.
       const createArgs = ["/Create", "/TN", TASK_NAME, "/TR", spec.taskCommand,
@@ -139,10 +162,13 @@ async function removeScheduler({ home = os.homedir(), platform = process.platfor
     if (platform === "win32") {
       const existing = await exec("schtasks", ["/Query", "/TN", TASK_NAME, "/XML"]);
       if (!existing.ok) return { removed: false };
-      if (!existing.stdout.includes("usagecairn.js") || !existing.stdout.includes("--all-local-sources")) {
+      if (!isOwnedWindowsTask(existing.stdout, spec)) {
         return { removed: false, reason: "unmanaged-task" };
       }
+      const owned = await readOwnedFiles(spec);
+      if (owned.conflict) return { removed: false, reason: "unmanaged-file" };
       const result = await exec("schtasks", ["/Delete", "/TN", TASK_NAME, "/F"]);
+      if (result.ok) for (const file of spec.files) await fs.rm(file.path, { force: true });
       return { removed: result.ok, reason: result.ok ? undefined : result.message };
     }
     const owned = await readOwnedFiles(spec);

@@ -49,6 +49,30 @@ test('persisted credentials let background hooks upload without env vars', async
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
 
+test('upload splits a backlog into requests that fit the server time limit', async () => {
+  const { dir, queuePath } = await sandbox();
+  try {
+    writeUploadConfig(queuePath, { apiUrl: 'https://tracker.example.com', accessKey: key });
+    const rows = Array.from({ length: 45 }, (_, i) => ({
+      hour_start: new Date(Date.UTC(2026, 9, 18, i)).toISOString(),
+      source: 'claude', model: 'claude-sonnet-4',
+      input_tokens: 10, output_tokens: 5, total_tokens: 15, conversation_count: 1,
+    }));
+    await fs.writeFile(queuePath, rows.map((row) => JSON.stringify(row)).join('\n') + '\n');
+    const batches = [];
+    const request = async (_url, options) => {
+      const body = JSON.parse(options.body);
+      batches.push({ count: body.hourly.length, revision: body.snapshot_revision });
+      return { ok: true, status: 200 };
+    };
+    assert.deepEqual(await uploadQueue({ queuePath, env: {}, request }), { uploaded: 45, pending: 0 });
+    assert.deepEqual(batches.map((batch) => batch.count), [20, 20, 5]);
+    assert.ok(batches[0].revision < batches[1].revision && batches[1].revision < batches[2].revision);
+    assert.deepEqual(await uploadQueue({ queuePath, env: {}, request }), { uploaded: 0, pending: 0 });
+    assert.equal(batches.length, 3);
+  } finally { await fs.rm(dir, { recursive: true, force: true }); }
+});
+
 test('connect rejects unsafe URLs and empty keys, accepts any key format, and can clear credentials', async () => {
   const { dir, queuePath } = await sandbox();
   try {

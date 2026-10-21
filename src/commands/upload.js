@@ -9,6 +9,9 @@ const { getOrCreateMachineId } = require('../lib/machine-id');
 const { resolveUploadConfig } = require('../lib/upload-config');
 
 const SAMPLE_BYTES = 4096;
+// The Vercel handler upserts rows sequentially and has a 30-second limit.
+// Keep each request small enough to finish even with a slow remote database.
+const UPLOAD_BATCH_ROWS = 20;
 
 async function sample(handle, position, length) {
   const bytes = Buffer.alloc(length);
@@ -79,7 +82,7 @@ async function uploadQueue({ queuePath = path.join(os.homedir(), '.token-pulse',
   let offset = await uploadStart(queuePath, statePath, identity, stat, replay);
   let uploaded = 0;
   while (offset < size) {
-    const batch = await readQueueBatch(queuePath, offset, 200);
+    const batch = await readQueueBatch(queuePath, offset, UPLOAD_BATCH_ROWS);
     if (batch.nextOffset <= offset) break; // incomplete trailing line: retry next run
     if (batch.nextOffset > size) break; // producer appended beyond this run's snapshot
     const hourly = batch.buckets.map((row) => ({
