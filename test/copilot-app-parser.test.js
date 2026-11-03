@@ -673,7 +673,10 @@ test("Copilot App DB and OTEL parsing coexist without sharing cursors or changin
   }
 });
 
-test("parseCopilotAppDbIncremental reprocesses when only SQLite sidecars change", async () => {
+// Holding a WAL open needs a live sqlite3 CLI process; skip where it is absent.
+const hasSqliteCli = cp.spawnSync("sqlite3", ["-version"], { stdio: "ignore" }).status === 0;
+
+test("parseCopilotAppDbIncremental reprocesses when only SQLite sidecars change", { skip: !hasSqliteCli && "sqlite3 CLI not on PATH" }, async () => {
   const { dir, dbPath } = makeCopilotAppDb([
     {
       id: "wal-session",

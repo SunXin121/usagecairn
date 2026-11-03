@@ -33,7 +33,8 @@ test('upload persists each acknowledged batch and only reads the appended tail',
   const options = { queuePath, baseUrl: 'http://localhost:3000', key: keyA, env: {}, request };
   await assert.rejects(uploadQueue(options), /503/);
   const statePath = path.join(path.dirname(queuePath), 'upload.state.json');
-  assert.equal((await fs.stat(statePath)).mode & 0o777, 0o600);
+  // POSIX mode bits do not describe Windows NTFS access permissions.
+  if (process.platform !== 'win32') assert.equal((await fs.stat(statePath)).mode & 0o777, 0o600);
   assert.equal((await fs.readFile(statePath, 'utf8')).includes(keyA), false);
   assert.equal(calls[0].hourly.length, 20, 'first acknowledged batch is bounded');
   assert.equal(calls[1].hourly[0].model, 'model-21', 'failed batch begins after the saved offset');

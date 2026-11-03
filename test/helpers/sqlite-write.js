@@ -8,13 +8,22 @@
 // src/lib/sqlite-reader (CLI-first), so parser fidelity is preserved.
 //
 // node:sqlite emits a one-time ExperimentalWarning on first require; harmless in
-// tests (it goes to stderr and does not fail the run).
-const { DatabaseSync } = require("node:sqlite");
+// tests (it goes to stderr and does not fail the run). On Node 20, which has no
+// node:sqlite, fixtures fall back to the sqlite3 CLI.
+const { execFileSync } = require("node:child_process");
+let DatabaseSync = null;
+try {
+  ({ DatabaseSync } = require("node:sqlite"));
+} catch (_) {}
 
 // Runs one or more semicolon-separated SQL statements against dbPath, creating
 // the database file if it does not exist. Drop-in replacement for a helper that
 // shelled out to `sqlite3 <dbPath> <sql>`.
 function runSql(dbPath, sql) {
+  if (!DatabaseSync) {
+    execFileSync("sqlite3", [dbPath, sql], { stdio: ["ignore", "ignore", "pipe"] });
+    return;
+  }
   const db = new DatabaseSync(dbPath);
   try {
     db.exec(sql);

@@ -19,8 +19,11 @@ test('persisted credentials let background hooks upload without env vars', async
   try {
     const result = await cmdConnect(['--api-url', 'https://tracker.example.com', '--key', key], { queuePath, log: () => {} });
     assert.equal(result.saved, true);
-    const mode = (await fs.stat(configPathFor(queuePath))).mode & 0o777;
-    assert.equal(mode, 0o600);
+    // POSIX mode bits do not describe Windows NTFS access permissions.
+    if (process.platform !== 'win32') {
+      const mode = (await fs.stat(configPathFor(queuePath))).mode & 0o777;
+      assert.equal(mode, 0o600);
+    }
     assert.deepEqual(await readUploadConfig(queuePath), { apiUrl: 'https://tracker.example.com', accessKey: key });
 
     const resolved = resolveUploadConfig({ queuePath, env: {} });
