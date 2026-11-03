@@ -374,6 +374,9 @@ module.exports = {
   MODEL_PRICING,
   ZERO_PRICING,
   OPENAI_LONG_CONTEXT_INPUT_THRESHOLD,
+  // Model-name substrings whose price depends on the bucket's time of day.
+  // Aggregations must keep those rows at hourly granularity.
+  TIME_PRICED_MODEL_SUBSTRINGS: Object.freeze([...DEEPSEEK_TIME_PRICED_MODELS]),
   // Internal hooks for tests.
   __getStateForTests: () => state,
 };

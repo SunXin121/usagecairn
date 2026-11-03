@@ -6,7 +6,31 @@ on:
 permissions:
   contents: read
 jobs:
-  ci:
+  # The collector runs on the user's machine: cover every supported OS and the
+  # oldest and newest Node.js lines allowed by package.json "engines".
+  collector:
+    name: collector (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [24]
+        include:
+          - os: ubuntu-latest
+            node: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  # Server and dashboard deploy to Vercel (Linux), so one runner suffices.
+  dashboard:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,4 +43,5 @@ jobs:
             dashboard/package-lock.json
       - run: npm ci
       - run: npm ci --prefix dashboard
-      - run: npm run ci:local
+      - run: npm run dashboard:test
+      - run: npm run dashboard:build

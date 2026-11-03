@@ -19,7 +19,7 @@ You can collect usage locally without deploying anything: skip `connect` and run
 ## Prerequisites
 
 - **Node.js 20+** and npm on the machine running your agents; macOS, Linux, and Windows are supported (some sources can also detect Windows/WSL installs).
-- For the online dashboard: a Vercel project and PostgreSQL database, such as Neon through Vercel Storage/Marketplace; a SQL editor or `psql` to initialize the schema.
+- For the online dashboard: a Vercel project and PostgreSQL database, such as Neon through Vercel Storage/Marketplace; a SQL editor or `psql` only if the database role cannot create tables (the API applies the schema itself).
 - A supported agent with accessible usage records. An initial sync can show zero if there is no history yet.
 
 ## 1. Deploy the server and dashboard
@@ -33,7 +33,7 @@ You can collect usage locally without deploying anything: skip `connect` and run
 
    Paste that value into `ACCESS_KEY`; never use a `VITE_` prefix or commit it to Git. Any non-empty value is accepted; the example format is a recommendation. Redeploy after changing environment variables.
 3. Attach PostgreSQL under the Vercel project's **Storage** tab and ensure the integration supplies `DATABASE_URL` to the relevant deployment environment. If you connected it after the first deployment, redeploy from **Deployments**. An external PostgreSQL database also works if you set its `DATABASE_URL` in the server environment yourself.
-4. Apply [`server/schema.sql`](server/schema.sql) once to that database, either in its SQL editor or with `psql` from a machine with database access:
+4. The API creates and upgrades its tables from [`server/schema.sql`](server/schema.sql) on its first request after each deployment, so normally there is nothing to run. If the database role is not allowed to create tables (the function log then shows `schema migration failed`), apply the file yourself in the database's SQL editor or with `psql` from a machine with database access; it is idempotent and safe to rerun after every upgrade:
 
    ```bash
    psql "$DATABASE_URL" -f server/schema.sql
@@ -73,10 +73,10 @@ For existing installations, the legacy `~/.token-pulse` state directory, `TOKEN_
 
 ## 3. Open the dashboard and troubleshoot
 
-Open your deployed site and enter the same key used by `connect`. The browser holds it in `sessionStorage` for the current session; the dashboard requests date/source/model aggregates from the protected `/api/usage` endpoint. Cost is an **estimate**, not a vendor invoice. The default range is about 30 days; custom ranges are limited to 10 years. Queries exceeding **50,000** raw rows fail instead of returning incomplete totals: shorten the date range.
+Open your deployed site and enter the same key used by `connect`. The browser holds it in `sessionStorage` for the current session; the dashboard requests date/source/model aggregates from the protected `/api/usage` endpoint. Cost is an **estimate**, not a vendor invoice. Days are calendar days in your browser's time zone, so "today" starts at local midnight. The default range is about 30 days; custom ranges are limited to 10 years. Usage from all devices is merged per source, model and day in the database; a range that still exceeds **100,000** merged rows fails instead of returning incomplete totals: shorten the date range.
 
 - **401**: verify the browser key matches Vercel's `ACCESS_KEY` and that changes were redeployed. `connect --show` displays your local destination with a redacted key.
-- **Server error**: inspect Vercel function logs, `DATABASE_URL`, and whether `server/schema.sql` was applied to the connected database.
+- **Server error**: inspect Vercel function logs, `DATABASE_URL`, and whether a `schema migration failed` log asks you to apply `server/schema.sql` manually.
 - **Empty dashboard**: run `sync` and `status`; check for local agent usage, a successful `connect`, and pending queue bytes. The “Local sources” line in `status` is not a comprehensive detection report.
 - **Offline/upload failure**: queued records stay on disk for the next `sync` or `upload`. If server data was repaired and the local ledger is intact, use `upload --replay`.
 

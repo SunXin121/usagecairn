@@ -74,3 +74,25 @@ test('every period tab stays inside the server date-range limit', async () => {
   expect(Math.max(...spans)).toBeLessThanOrEqual(3660);
   expect(Math.min(...spans)).toBeGreaterThanOrEqual(0);
 });
+
+test('usage requests carry the viewer time zone and local calendar days', async () => {
+  const request = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ summary: {}, daily: [], models: [] }) });
+  await fetchUsage('key', '2026-10-19', '2026-10-19', request, 'Asia/Shanghai');
+  expect(new URL(request.mock.calls[0][0], 'http://localhost').searchParams.get('tz')).toBe('Asia/Shanghai');
+
+  // 07:00 in Shanghai is still the previous day in UTC; "日" must ask for the local day.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 19, 7, 0, 0));
+  try {
+    sessionStorage.setItem('tt.accessKey', `tt_${'a'.repeat(64)}`);
+    vi.stubGlobal('fetch', request);
+    render(<ThemeProvider><App /></ThemeProvider>);
+    fireEvent.click(screen.getByText('日'));
+    await waitFor(() => {
+      const params = new URL(request.mock.calls.at(-1)[0], 'http://localhost').searchParams;
+      expect(params.get('from')).toBe('2026-10-19');
+      expect(params.get('to')).toBe('2026-10-19');
+      expect(params.get('tz')).toBeTruthy();
+    });
+  } finally { vi.useRealTimers(); }
+});

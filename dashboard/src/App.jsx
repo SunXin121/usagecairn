@@ -19,8 +19,14 @@ const SOURCE_COLORS = {
   grok: 'var(--community-grok)', deepseek: 'var(--community-deepseek)', minimax: 'var(--community-minimax)',
 };
 
-export async function fetchUsage(key, from, to, request = fetch) {
-  const query = new URLSearchParams({ from, to });
+// Days are calendar days in the viewer's zone; the API groups by the same
+// zone so "today" starts at local midnight rather than 00:00 UTC.
+export function browserTimeZone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch { return 'UTC'; }
+}
+
+export async function fetchUsage(key, from, to, request = fetch, tz = browserTimeZone()) {
+  const query = new URLSearchParams({ from, to, tz });
   const response = await request(`/api/usage?${query}`, {
     headers: { Authorization: `Bearer ${key}` }, cache: 'no-store',
   });
@@ -28,9 +34,15 @@ export async function fetchUsage(key, from, to, request = fetch) {
   return response.json();
 }
 
-const isoDay = (date) => date.toISOString().slice(0, 10);
-const today = () => isoDay(new Date());
-const daysAgo = (n) => isoDay(new Date(Date.now() - n * 86400000));
+const pad = (value) => String(value).padStart(2, '0');
+const localDay = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+const today = () => localDay(new Date());
+// Calendar arithmetic (not 24h multiples) so DST transitions never skip a day.
+const daysAgo = (n) => {
+  const date = new Date();
+  date.setDate(date.getDate() - n);
+  return localDay(date);
+};
 const number = (value) => new Intl.NumberFormat('en-US').format(Math.round(Number(value) || 0));
 const compact = (value) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format(Number(value) || 0);
 const usd = (value) => {
@@ -312,7 +324,7 @@ export default function App() {
                     <div className="flex flex-wrap items-end gap-3 text-xs text-oai-gray-500">
                       <label>从 <input type="date" value={customFrom} max={customTo} onChange={(e) => setCustomFrom(e.target.value)} className="ml-1 rounded-md border border-oai-gray-200 bg-transparent px-2 py-1.5 dark:border-oai-gray-700" /></label>
                       <label>到 <input type="date" value={customTo} min={customFrom} onChange={(e) => setCustomTo(e.target.value)} className="ml-1 rounded-md border border-oai-gray-200 bg-transparent px-2 py-1.5 dark:border-oai-gray-700" /></label>
-                      <span>UTC 日期</span>
+                      <span>{usage?.tz || browserTimeZone()} 日期</span>
                     </div>
                   )}
                   <UsageHero

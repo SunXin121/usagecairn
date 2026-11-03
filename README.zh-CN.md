@@ -19,7 +19,7 @@ Vercel /api/ingest → PostgreSQL → /api/usage → 浏览器看板
 ## 前置条件
 
 - 本机安装 **Node.js 20 或更新版本**和 npm；支持 macOS、Linux、Windows（部分来源可识别 Windows/WSL 安装，具体以本机数据为准）。
-- 在线看板需要 Vercel 项目和 PostgreSQL 数据库（例如 Vercel Storage/Marketplace 集成的 Neon）；初始化数据库需要 SQL 编辑器或 `psql`。
+- 在线看板需要 Vercel 项目和 PostgreSQL 数据库（例如 Vercel Storage/Marketplace 集成的 Neon）；仅当数据库角色没有建表权限时才需要 SQL 编辑器或 `psql`（API 会自行初始化表结构）。
 - 至少有一个受支持的 Agent 在本机留下用量记录；没有历史数据时初次同步可能显示 0。
 
 ## 1. 部署服务端与看板
@@ -33,7 +33,7 @@ Vercel /api/ingest → PostgreSQL → /api/usage → 浏览器看板
 
    把输出值填到 `ACCESS_KEY`，修改环境变量后需要重新部署才能让部署生效。
 3. 在 Vercel 项目的 **Storage** 页连接 PostgreSQL 数据库，并确保集成为当前部署环境注入 `DATABASE_URL`。如果数据库是在首次部署后绑定的，请在 **Deployments** 中重新部署，确保函数拿到连接变量。非 Vercel 集成的数据库也可用，但须自行在服务端环境变量中设置其 `DATABASE_URL`。
-4. 对该数据库执行一次仓库内的 [`server/schema.sql`](server/schema.sql)。可以在数据库 SQL 编辑器中粘贴执行；也可以在已安装 `psql` 的机器上（需有该数据库连接权限）执行：
+4. 每次部署后，API 会在收到第一个请求时根据 [`server/schema.sql`](server/schema.sql) 自动建表和升级表结构，通常无需手动操作。如果数据库角色没有建表权限（函数日志会出现 `schema migration failed`），请自行执行该文件：可以在数据库 SQL 编辑器中粘贴执行，也可以在已安装 `psql` 的机器上（需有该数据库连接权限）执行。该文件可重复执行，每次升级后再执行一遍也是安全的：
 
    ```bash
    psql "$DATABASE_URL" -f server/schema.sql
@@ -71,10 +71,10 @@ npx usagecairn@latest status                         # 核查上传配置、队�
 
 ## 3. 打开看板与排障
 
-访问部署域名，输入与 `connect` 相同的密钥。浏览器只在当前会话的 `sessionStorage` 保存该值；看板通过受保护的 `/api/usage` 读取按日期、来源、模型汇总的数据。费用是估算值，并非供应商账单。默认读取近 30 天；自定义日期最多 10 年，查询超过 **50,000** 条原始记录时会报错而不是返回不完整的统计，请缩短范围。
+访问部署域名，输入与 `connect` 相同的密钥。浏览器只在当前会话的 `sessionStorage` 保存该值；看板通过受保护的 `/api/usage` 读取按日期、来源、模型汇总的数据。费用是估算值，并非供应商账单。日期按浏览器所在时区的自然日划分，“今天”从本地零点开始。默认读取近 30 天；自定义日期最多 10 年。所有设备的数据会在数据库中按来源、模型和日期合并，合并后仍超过 **100,000** 行时会报错而不是返回不完整的统计，请缩短范围。
 
 - 看板提示 401：确认浏览器密钥与 Vercel 的 `ACCESS_KEY` 一致，重设变量后已重新部署；`connect --show` 可检查本机目标地址（密钥脱敏）。
-- 看板提示服务端错误：检查 Vercel 函数日志、`DATABASE_URL` 是否已注入，以及是否对正确的数据库执行了 `server/schema.sql`。
+- 看板提示服务端错误：检查 Vercel 函数日志、`DATABASE_URL` 是否已注入，以及日志中是否有 `schema migration failed`（需要手动执行 `server/schema.sql`）。
 - 看板无数据：先运行 `sync`、`status`；检查 Agent 是否已有可读取的用量、采集端是否已 `connect`、队列是否仍有待上传数据。仅靠 `status` 的“Local sources”行不能判断所有 Agent 是否被检测到。
 - 断网或上传失败：本地队列保留待发送记录，下次 `sync` 或 `upload` 可重试；若服务端数据损坏但本地账本仍完整，可执行 `upload --replay`。
 

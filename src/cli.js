@@ -18,7 +18,15 @@ const HELP = [
   '  usagecairn uninstall [--purge]                   Remove hooks and local state',
 ].join('\n');
 
-async function uploadIfConfigured() {
+function uploadSummary(result) {
+  return result.busy
+    ? `Upload skipped: another upload is in progress (${result.pending} pending bytes).`
+    : `Uploaded ${result.uploaded} usage snapshots (${result.pending} pending bytes).`;
+}
+
+// Background (--auto) syncs never wait on a concurrent upload; that upload
+// will carry their rows or the next run will.
+async function uploadIfConfigured({ lockWaitMs } = {}) {
   const config = resolveUploadConfig({ queuePath: defaultQueuePath() });
   if (config.invalid) {
     console.error('Upload credentials are invalid; run: usagecairn connect --api-url <url> --key <key>');
@@ -26,7 +34,7 @@ async function uploadIfConfigured() {
     return null;
   }
   if (!config.apiUrl || !config.accessKey) return null;
-  return uploadQueue();
+  return uploadQueue(lockWaitMs == null ? {} : { lockWaitMs });
 }
 
 async function run(argv) {
@@ -44,14 +52,15 @@ async function run(argv) {
       return cmdInit(rest);
     case 'sync': {
       await cmdSync(rest);
-      const result = await uploadIfConfigured();
-      if (result) console.log(`Uploaded ${result.uploaded} usage snapshots (${result.pending} pending bytes).`);
+      const result = await uploadIfConfigured(rest.includes('--auto') ? { lockWaitMs: 0 } : {});
+      if (result) console.log(uploadSummary(result));
       return;
     }
     case 'upload': {
       if (rest.length > 1 || (rest.length === 1 && rest[0] !== '--replay')) throw new Error('Usage: usagecairn upload [--replay]');
       const result = await uploadQueue({ replay: rest[0] === '--replay' });
-      console.log(`Uploaded ${result.uploaded} usage snapshots (${result.pending} pending bytes).`);
+      console.log(uploadSummary(result));
+      if (result.busy) process.exitCode = 1;
       return;
     }
     case 'status':

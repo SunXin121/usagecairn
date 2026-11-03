@@ -75,7 +75,7 @@ test('ingest limits actual UTF-8 bytes of pre-parsed and streamed bodies before 
       yield payload.subarray(0, 52);
       yield payload.subarray(52, 53);
       yield payload.subarray(53);
-    } }), { inserted: 0, skipped: 0 });
+    } }), { inserted: 0, skipped: 0, max_records: 200 });
   } finally { await db.close(); }
 });
 
@@ -91,15 +91,15 @@ test('usage caps combined raw rows and sends a clear 400 without partial totals'
   let sql;
   const fake = { query: async (query, params) => {
     sql = query;
-    assert.equal(params[2], 50001);
-    return { rows: Array(params[2]).fill(row('cursor', 1)) };
+    assert.equal(params[4], 100001);
+    return { rows: Array(params[4]).fill(row('cursor', 1)) };
   } };
   const res = { setHeader() {}, end(text) { this.body = JSON.parse(text); } };
   await createHandler(fake)({ url: '/api/usage?from=2026-02-28&to=2026-02-28', method: 'GET', headers: { authorization: 'Bearer review-test-key' } }, res);
   assert.equal(res.statusCode, 400);
-  assert.match(res.body.error, /more than 50000 rows; choose a shorter date range/);
+  assert.match(res.body.error, /more than 100000 rows; choose a shorter date range/);
   assert.equal('summary' in res.body, false);
-  assert.match(sql, /UNION ALL[\s\S]*LIMIT \$3/);
+  assert.match(sql, /UNION ALL[\s\S]*GROUP BY[\s\S]*LIMIT \$5/);
 });
 
 test('usage under the row budget still prices rows and de-duplicates cursor by max tokens', async () => {

@@ -8,6 +8,12 @@ This repository has three parts:
 | Server storage | `server/`, `api/` | Node functions + PostgreSQL |
 | Dashboard | `dashboard/` | React 18, Vite, Tailwind |
 
+## Code layout
+
+- `src/lib/parsers/<provider>.js` parses one agent's local data; `core.js` holds helpers shared by several providers. Providers may require only `core.js` (enforced by `test/parser-layout.test.js`). `src/lib/rollout.js` re-exports them all.
+- `src/commands/sync-sources.js` holds the per-provider steps that `cmdSync` (`src/commands/sync.js`) runs in order under `sync.lock`.
+- `server/schema.sql` is idempotent and versioned: append new `ALTER TABLE … IF NOT EXISTS` statements, bump the version in its final `INSERT` and `SCHEMA_VERSION` in `server/migrate.cjs`. The deployed API applies it on its first request.
+
 ## Setup
 
 ```bash

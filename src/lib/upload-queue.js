@@ -59,9 +59,11 @@ function snapshotKey(bytes) {
   return { key: JSON.stringify(["hourly", source, model, row.hour_start]), verifiedMs: null };
 }
 
-// Caller holds sync.lock. Only rewrite pending snapshots; uploaded history and
+// Caller holds sync.lock (no appenders) and upload.lock (no readers that
+// persist offsets). Only rewrite pending snapshots; uploaded history and
 // queue.state.json stay byte-for-byte unchanged across an atomic replacement.
-async function compactPendingQueue({ queuePath, offset = 0, minPendingBytes = BACKLOG_BYTES }) {
+// minRemovedBytes skips the rewrite unless enough superseded bytes would go.
+async function compactPendingQueue({ queuePath, offset = 0, minPendingBytes = BACKLOG_BYTES, minRemovedBytes = 0 }) {
   let input;
   let output;
   let temporary;
@@ -78,18 +80,21 @@ async function compactPendingQueue({ queuePath, offset = 0, minPendingBytes = BA
     }
     const latest = new Map();
     let removedRecords = 0;
+    let removedBytes = 0;
     for await (const line of iterateQueueLines(input, offset, before.size)) {
       const snapshot = line.complete ? snapshotKey(line.bytes) : null;
       if (snapshot == null) continue;
       const previous = latest.get(snapshot.key);
-      if (previous) removedRecords += 1;
       // Account truth uses a strictly newer fetch stamp; equal stamps retain
       // the first observation, even after a replay or local clock rollback.
-      if (!previous || snapshot.verifiedMs === null || snapshot.verifiedMs > previous.verifiedMs) {
-        latest.set(snapshot.key, { start: line.start, verifiedMs: snapshot.verifiedMs });
+      const replaces = !previous || snapshot.verifiedMs === null || snapshot.verifiedMs > previous.verifiedMs;
+      if (previous) {
+        removedRecords += 1;
+        removedBytes += replaces ? previous.length : line.bytes.length;
       }
+      if (replaces) latest.set(snapshot.key, { start: line.start, verifiedMs: snapshot.verifiedMs, length: line.bytes.length });
     }
-    if (!removedRecords) return unchanged;
+    if (!removedRecords || removedBytes < minRemovedBytes) return unchanged;
 
     temporary = `${queuePath}.compact.${crypto.randomUUID()}`;
     output = await fs.open(temporary, "wx", before.mode & 0o777);

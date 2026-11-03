@@ -1,7 +1,8 @@
 const { createHash, timingSafeEqual } = require('node:crypto');
 const { ingest } = require('./ingest.cjs');
 const { usage, summarize } = require('./usage.cjs');
-const { parseBucket } = require('./validation.cjs');
+const { parseBucket, BadRequestError } = require('./validation.cjs');
+const { ensureSchema } = require('./migrate.cjs');
 
 function send(res, status, value) {
   res.statusCode = status;
@@ -26,7 +27,9 @@ function authorized(req) {
   return timingSafeEqual(createHash('sha256').update(token).digest(), digest);
 }
 
-function createHandler(pool) {
+// `migrate` applies server/schema.sql once per warm instance before touching
+// tables (the deployed API enables it; tests that inject a fake pool do not).
+function createHandler(pool, { migrate = false } = {}) {
   return async function handler(req, res) {
     try {
       if (!expectedKeyDigest()) {
@@ -35,15 +38,18 @@ function createHandler(pool) {
       }
       if (!authorized(req)) return send(res, 401, { error: 'Access key required' });
       const url = new URL(req.url, 'http://localhost');
-      if (url.pathname === '/api/ingest' && req.method === 'POST') {
-        return send(res, 200, await ingest(pool, req));
+      const route = url.pathname === '/api/ingest' && req.method === 'POST' ? ingest
+        : url.pathname === '/api/usage' && req.method === 'GET' ? usage : null;
+      if (!route) return send(res, 404, { error: 'Not found' });
+      if (migrate) {
+        try { await ensureSchema(pool); } catch (error) {
+          console.error('[api] schema migration failed; apply server/schema.sql manually:', error.message);
+          return send(res, 500, { error: 'Server error' });
+        }
       }
-      if (url.pathname === '/api/usage' && req.method === 'GET') {
-        return send(res, 200, await usage(pool, url));
-      }
-      return send(res, 404, { error: 'Not found' });
+      return send(res, 200, await route(pool, route === ingest ? req : url));
     } catch (error) {
-      if (/^(Invalid|Payload too large)/.test(error.message) || error instanceof SyntaxError) return send(res, 400, { error: error.message });
+      if (error instanceof BadRequestError || error instanceof SyntaxError) return send(res, 400, { error: error.message });
       console.error('[api] request failed:', error.message);
       return send(res, 500, { error: 'Server error' });
     }

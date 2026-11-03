@@ -78,7 +78,7 @@ test('ingest accepts streamed JSON and preserves validation and public exports',
 
   const queries = [];
   const handler = createHandler({ connect: async () => ({
-    async query(sql) { queries.push(sql); }, release() { queries.push('RELEASE'); },
+    async query(sql) { queries.push(sql); return /^INSERT/.test(sql.trim()) ? { rows: [{}] } : undefined; }, release() { queries.push('RELEASE'); },
   }) });
   const payload = { device_id: 'machine_00001', hourly: [{
     source: 'claude', model: 'test', hour_start: '2026-10-18T12:00:00Z', total_tokens: 12,
@@ -88,7 +88,7 @@ test('ingest accepts streamed JSON and preserves validation and public exports',
   const res = response();
   await handler(req, res);
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, { inserted: 1, skipped: 0 });
+  assert.deepEqual(res.body, { inserted: 1, skipped: 0, max_records: 200 });
   assert.equal(queries[0], 'BEGIN');
   assert.equal(queries[2], 'COMMIT');
   assert.equal(queries[3], 'RELEASE');
