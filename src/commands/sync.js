@@ -1812,10 +1812,9 @@ async function cmdSync(argv, context = {}) {
             ? `- Local backlog: ${formatBytes(pendingBytes)} awaiting upload (run: usagecairn upload)`
             : "- Local backlog: none",
           codexRecordOnlyWarning ? `- Warning: ${codexRecordOnlyWarning}` : null,
-          "",
         ]
           .filter(Boolean)
-          .join("\n"),
+          .join("\n") + "\n",
       );
     }
 
